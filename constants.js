@@ -1,5 +1,5 @@
 window.TASK_DEFAULTS = Object.freeze({
-  APP_NAME: "Arithmetic Performance Task",
+  APP_NAME: "The Addition Task",
   TASK_VERSION: "1.1.0",
 
   WORK_PERIOD_SECONDS: 30,
