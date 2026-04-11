@@ -143,3 +143,23 @@ Qualtrics.SurveyEngine.addOnload(function () {
   });
 });
 ```
+
+## 3) Embedded Data Variables (add to qualtrics)
+
+```
+SessionID
+Condition
+apt_last_trial_json
+apt_trial_count
+apt_last_prompt
+apt_last_accuracy
+apt_summary_json
+apt_correct
+apt_attempted
+apt_accuracy
+apt_mean_rt_ms
+apt_target_met
+apt_trials_json
+apt_practice_trials_json
+```
+
