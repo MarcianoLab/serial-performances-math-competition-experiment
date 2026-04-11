@@ -1,6 +1,6 @@
 window.TASK_DEFAULTS = Object.freeze({
-  APP_NAME: "The Addition Task",
-  TASK_VERSION: "1.1.0",
+  APP_NAME: "Addition Task",
+  TASK_VERSION: "1.1.1",
 
   WORK_PERIOD_SECONDS: 30,
   PERFORMANCE_TARGET_CORRECT: 25,
@@ -20,15 +20,13 @@ window.TASK_DEFAULTS = Object.freeze({
   INPUT_MAX_LENGTH: 5,
   COUNTDOWN_WARNING_SECONDS: 15,
 
-  POST_MESSAGE_NAMESPACE: "arithmetic-task",
+  POST_MESSAGE_NAMESPACE: "addition-task",
   POST_MESSAGE_TARGET_ORIGIN: "*",
 
-  INTRO_TEXT:
-    "Add the displayed two-digit numbers as quickly and accurately as you can during the timed block.",
+  INTRO_TEXT: "",
   PRACTICE_TEXT:
     "Use the practice block to get comfortable with the response format before the timed block begins.",
-  SUMMARY_TEXT:
-    "The task is complete. Please wait for the survey page to continue or use the restart button below in standalone mode.",
+  SUMMARY_TEXT: "",
 
   SHOW_PROGRESS_BAR: false,
   SHOW_ACCURACY_PANEL: false,
