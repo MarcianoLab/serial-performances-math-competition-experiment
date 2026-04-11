@@ -4,8 +4,6 @@ This example assumes the task is hosted on GitHub Pages and embedded in a Qualtr
 
 ## 1) Question HTML
 
-Paste this into the Qualtrics question HTML view.
-
 ```html
 <div id="apt-wrapper" style="width:100%;max-width:980px;margin:0 auto;">
   <iframe
@@ -21,11 +19,8 @@ Paste this into the Qualtrics question HTML view.
 
 ## 2) Question JavaScript
 
-Open the Qualtrics question JavaScript editor and paste the following.
-
 ```javascript
 Qualtrics.SurveyEngine.addOnload(function () {
-  var qThis = this;
   var frame = document.getElementById("apt-frame");
   var nextButton = document.getElementById("NextButton");
   var trialLogs = [];
@@ -68,7 +63,6 @@ Qualtrics.SurveyEngine.addOnload(function () {
 
     if (data.eventType === "trial") {
       trialLogs.push(data.payload);
-
       Qualtrics.SurveyEngine.setEmbeddedData("apt_last_trial_json", JSON.stringify(data.payload));
       Qualtrics.SurveyEngine.setEmbeddedData("apt_trial_count", String(trialLogs.length));
       Qualtrics.SurveyEngine.setEmbeddedData("apt_last_prompt", data.payload.prompt || "");
@@ -84,16 +78,10 @@ Qualtrics.SurveyEngine.addOnload(function () {
       Qualtrics.SurveyEngine.setEmbeddedData("apt_accuracy", summary.accuracy || "");
       Qualtrics.SurveyEngine.setEmbeddedData("apt_mean_rt_ms", String(summary.meanRtMs || ""));
       Qualtrics.SurveyEngine.setEmbeddedData("apt_target_met", summary.targetMet ? "1" : "0");
-
-      /*
-        Optional: store the full arrays only if your task is short enough.
-        Large JSON payloads can exceed practical Qualtrics limits.
-      */
       Qualtrics.SurveyEngine.setEmbeddedData("apt_trials_json", JSON.stringify(data.payload.trials || []));
       Qualtrics.SurveyEngine.setEmbeddedData("apt_practice_trials_json", JSON.stringify(data.payload.practiceTrials || []));
 
       restoreQualtricsChrome();
-
       window.removeEventListener("message", onTaskMessage);
 
       if (nextButton) {
@@ -111,29 +99,3 @@ Qualtrics.SurveyEngine.addOnload(function () {
   });
 });
 ```
-
-## 3) Suggested embedded-data fields
-
-Create these in your Survey Flow if you want to store the key outputs:
-
-- `Condition`
-- `apt_trial_count`
-- `apt_last_trial_json`
-- `apt_last_prompt`
-- `apt_last_accuracy`
-- `apt_summary_json`
-- `apt_correct`
-- `apt_attempted`
-- `apt_accuracy`
-- `apt_mean_rt_ms`
-- `apt_target_met`
-- `apt_trials_json`
-- `apt_practice_trials_json`
-
-## 4) Recommended preview checks
-
-- Preview the question in Qualtrics.
-- Confirm the Qualtrics header and buttons disappear when the page loads.
-- Complete at least one trial and confirm trial messages arrive.
-- Finish the task and confirm the Qualtrics UI is restored.
-- Confirm the survey automatically advances after the completion message.
