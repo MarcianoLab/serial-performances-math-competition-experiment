@@ -91,34 +91,37 @@
     state.phase = "intro";
     clearTimers();
 
+    const introCards = [];
+
+    if (config.SHOW_INTRO_TIMED_WORK_PERIOD) {
+      introCards.push(createInfoCard("Timed work period", formatSeconds(config.WORK_PERIOD_SECONDS)));
+    }
+
+    if (config.SHOW_INTRO_PERFORMANCE_TARGET) {
+      introCards.push(createInfoCard("Performance target", `${config.PERFORMANCE_TARGET_CORRECT} correct`));
+    }
+
+    if (config.SHOW_INTRO_ITEM_FORMAT) {
+      introCards.push(
+        createInfoCard("Item format", `${config.MIN_ADDENDS}-${config.MAX_ADDENDS} two-digit numbers`)
+      );
+    }
+
+    if (config.SHOW_INTRO_IMMEDIATE_FEEDBACK) {
+      introCards.push(createInfoCard("Immediate feedback", config.SHOW_IMMEDIATE_FEEDBACK ? "On" : "Off"));
+    }
+
     app.innerHTML = `
-      <div class="eyebrow">Laboratory-style arithmetic task</div>
       <h1 class="panel-title">${escapeHtml(config.APP_NAME)}</h1>
       <p class="panel-copy">${escapeHtml(config.INTRO_TEXT)}</p>
 
-      <div class="info-grid">
-        <div class="info-card">
-          <div class="info-label">Timed work period</div>
-          <div class="info-value">${formatSeconds(config.WORK_PERIOD_SECONDS)}</div>
-        </div>
-        <div class="info-card">
-          <div class="info-label">Performance target</div>
-          <div class="info-value">${config.PERFORMANCE_TARGET_CORRECT} correct</div>
-        </div>
-        <div class="info-card">
-          <div class="info-label">Item format</div>
-          <div class="info-value">${config.MIN_ADDENDS}-${config.MAX_ADDENDS} two-digit numbers</div>
-        </div>
-        <div class="info-card">
-          <div class="info-label">Immediate feedback</div>
-          <div class="info-value">${config.SHOW_IMMEDIATE_FEEDBACK ? "On" : "Off"}</div>
-        </div>
-      </div>
+      ${introCards.length ? `<div class="info-grid">${introCards.join("")}</div>` : ""}
 
-      <div class="callout">
-        <strong>Instructions.</strong> Solve each addition problem as quickly and accurately as possible.
-        Submit one whole-number answer per item. Once the timed block starts, continue working until the clock reaches zero.
-      </div>
+      ${
+        config.SHOW_INTRO_INSTRUCTIONS
+          ? `<div class="callout"><strong>Instructions.</strong> Solve each addition problem as quickly and accurately as possible. Submit one whole-number answer per item.</div>`
+          : ""
+      }
 
       ${
         config.ENABLE_PRACTICE_BLOCK && config.PRACTICE_TRIAL_COUNT > 0
@@ -153,10 +156,19 @@
     });
   }
 
+  function createInfoCard(label, value) {
+    return `
+      <div class="info-card">
+        <div class="info-label">${escapeHtml(label)}</div>
+        <div class="info-value">${escapeHtml(value)}</div>
+      </div>
+    `;
+  }
+
   function startPracticeBlock() {
     state.phase = "practice";
     renderTaskScaffold({
-      title: "Practice block",
+      title: "Practice",
       subtitle: `Complete ${config.PRACTICE_TRIAL_COUNT} practice item${config.PRACTICE_TRIAL_COUNT === 1 ? "" : "s"}.`,
       timerText: "Practice",
       statusClass: "is-neutral"
@@ -171,8 +183,8 @@
     state.mainDeadlinePerf = performance.now() + config.WORK_PERIOD_SECONDS * 1000;
 
     renderTaskScaffold({
-      title: "Timed work block",
-      subtitle: escapeHtml(config.MAIN_TEXT),
+      title: "Timed block",
+      subtitle: "",
       timerText: formatCountdown(config.WORK_PERIOD_SECONDS),
       statusClass: "is-active"
     });
@@ -183,12 +195,15 @@
   }
 
   function renderTaskScaffold({ title, subtitle, timerText, statusClass }) {
+    const showTrialsPanel = Boolean(config.SHOW_TRIALS_PANEL);
+    const showAccuracyPanel = Boolean(config.SHOW_ACCURACY_PANEL);
+    const showTrialNumberLabel = Boolean(config.SHOW_TRIAL_NUMBER_LABEL);
+
     app.innerHTML = `
       <div class="task-header">
         <div>
-          <div class="eyebrow">${state.phase === "practice" ? "Practice" : "Main task"}</div>
           <h1 class="panel-title compact-title">${escapeHtml(title)}</h1>
-          <p class="panel-copy compact-copy">${subtitle}</p>
+          ${subtitle ? `<p class="panel-copy compact-copy">${escapeHtml(subtitle)}</p>` : ""}
         </div>
         <div class="status-pill ${statusClass}" id="timer-pill">${timerText}</div>
       </div>
@@ -198,14 +213,16 @@
           <div class="stat-label">Correct</div>
           <div class="stat-value" id="correct-count">0</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Trials</div>
-          <div class="stat-value" id="trial-count">0</div>
-        </div>
-        <div class="stat-card ${config.SHOW_ACCURACY_PANEL ? "" : "is-hidden"}">
-          <div class="stat-label">Accuracy</div>
-          <div class="stat-value" id="accuracy-value">—</div>
-        </div>
+        ${
+          showTrialsPanel
+            ? `<div class="stat-card"><div class="stat-label">Trials</div><div class="stat-value" id="trial-count">0</div></div>`
+            : ""
+        }
+        ${
+          showAccuracyPanel
+            ? `<div class="stat-card"><div class="stat-label">Accuracy</div><div class="stat-value" id="accuracy-value">—</div></div>`
+            : ""
+        }
       </div>
 
       <div class="target-panel ${config.SHOW_PROGRESS_BAR ? "" : "is-hidden"}">
@@ -219,10 +236,11 @@
       </div>
 
       <section class="trial-panel">
-        <div class="trial-meta">
-          <span id="phase-label">${state.phase === "practice" ? "Practice item" : "Current item"}</span>
-          <span id="trial-number-label">1</span>
-        </div>
+        ${
+          showTrialNumberLabel
+            ? `<div class="trial-meta"><span id="trial-number-label">1</span></div>`
+            : ""
+        }
 
         <div class="equation" id="equation-display">&nbsp;</div>
 
@@ -285,10 +303,14 @@
     state.currentTrial = trial;
 
     document.getElementById("equation-display").textContent = trial.prompt;
-    document.getElementById("trial-number-label").textContent =
-      phase === "practice"
-        ? `Practice ${state.practiceTrialCounter + 1} of ${config.PRACTICE_TRIAL_COUNT}`
-        : `Trial ${state.mainTrialCounter + 1}`;
+
+    const trialNumberLabel = document.getElementById("trial-number-label");
+    if (trialNumberLabel) {
+      trialNumberLabel.textContent =
+        phase === "practice"
+          ? `Practice ${state.practiceTrialCounter + 1} of ${config.PRACTICE_TRIAL_COUNT}`
+          : `Trial ${state.mainTrialCounter + 1}`;
+    }
 
     if (config.AUTO_FOCUS_INPUT) {
       window.requestAnimationFrame(() => answerInput.focus());
@@ -449,8 +471,7 @@
     const accuracy = getAccuracy(state.practiceTrials);
 
     app.innerHTML = `
-      <div class="eyebrow">Practice complete</div>
-      <h1 class="panel-title">You are ready for the timed block</h1>
+      <h1 class="panel-title">Practice complete</h1>
       <p class="panel-copy">The main block will begin when you press the button below.</p>
 
       <div class="summary-grid narrow-grid">
@@ -515,42 +536,31 @@
     state.mainBlockEndedAtIso = nowIso();
 
     const summary = buildSummary();
+    const summaryCards = [];
 
-    app.innerHTML = `
-      <div class="eyebrow">Task complete</div>
-      <h1 class="panel-title">Final summary</h1>
-      <p class="panel-copy">${escapeHtml(config.SUMMARY_TEXT)}</p>
-
-      <div class="summary-grid">
+    if (config.SHOW_SUMMARY_CORRECT_CARD) {
+      summaryCards.push(`
         <div class="summary-card">
           <div class="summary-label">Correct</div>
           <div class="summary-value">${summary.correct}</div>
         </div>
-        <div class="summary-card">
-          <div class="summary-label">Attempted</div>
-          <div class="summary-value">${summary.attempted}</div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-label">Accuracy</div>
-          <div class="summary-value">${summary.accuracy}</div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-label">Mean RT</div>
-          <div class="summary-value">${summary.meanRtMs === null ? "—" : `${summary.meanRtMs} ms`}</div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-label">Best streak</div>
-          <div class="summary-value">${summary.bestStreak}</div>
-        </div>
+      `);
+    }
+
+    if (config.SHOW_SUMMARY_TARGET_MET_CARD) {
+      summaryCards.push(`
         <div class="summary-card ${summary.targetMet ? "is-success" : "is-neutral"}">
           <div class="summary-label">Target met</div>
           <div class="summary-value">${summary.targetMet ? "Yes" : "No"}</div>
         </div>
-      </div>
+      `);
+    }
 
-      <div class="callout ${summary.targetMet ? "success-callout" : "subtle-callout"}">
-        ${summary.targetMet ? "The performance target was reached or exceeded." : "The performance target was not reached in this run."}
-      </div>
+    app.innerHTML = `
+      <h1 class="panel-title">Final summary</h1>
+      <p class="panel-copy">${escapeHtml(config.SUMMARY_TEXT)}</p>
+
+      ${summaryCards.length ? `<div class="summary-grid narrow-grid">${summaryCards.join("")}</div>` : ""}
 
       <div class="actions-row ${config.ALLOW_RESTART ? "" : "is-hidden"}">
         <button class="btn btn-secondary" id="restart-btn" type="button">Restart Task</button>
@@ -691,7 +701,16 @@
       minAddends: config.MIN_ADDENDS,
       maxAddends: config.MAX_ADDENDS,
       minNumber: config.MIN_NUMBER,
-      maxNumber: config.MAX_NUMBER
+      maxNumber: config.MAX_NUMBER,
+      showIntroTimedWorkPeriod: config.SHOW_INTRO_TIMED_WORK_PERIOD,
+      showIntroPerformanceTarget: config.SHOW_INTRO_PERFORMANCE_TARGET,
+      showIntroItemFormat: config.SHOW_INTRO_ITEM_FORMAT,
+      showIntroImmediateFeedback: config.SHOW_INTRO_IMMEDIATE_FEEDBACK,
+      showIntroInstructions: config.SHOW_INTRO_INSTRUCTIONS,
+      showTrialsPanel: config.SHOW_TRIALS_PANEL,
+      showTrialNumberLabel: config.SHOW_TRIAL_NUMBER_LABEL,
+      showSummaryCorrectCard: config.SHOW_SUMMARY_CORRECT_CARD,
+      showSummaryTargetMetCard: config.SHOW_SUMMARY_TARGET_MET_CARD
     };
   }
 
@@ -807,7 +826,7 @@
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
-      .replace(/\"/g, "&quot;")
+      .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
   }
 })();
