@@ -94,7 +94,7 @@
     const introCards = [];
 
     if (config.SHOW_INTRO_TIMED_WORK_PERIOD) {
-      introCards.push(createInfoCard("Timed work period", formatSeconds(config.WORK_PERIOD_SECONDS)));
+      introCards.push(createInfoCard("Time", formatSeconds(config.WORK_PERIOD_SECONDS)));
     }
 
     if (config.SHOW_INTRO_PERFORMANCE_TARGET) {
@@ -113,7 +113,7 @@
 
     app.innerHTML = `
       <h1 class="panel-title">${escapeHtml(config.APP_NAME)}</h1>
-      <p class="panel-copy">${escapeHtml(config.INTRO_TEXT)}</p>
+      ${config.INTRO_TEXT ? `<p class="panel-copy">${escapeHtml(config.INTRO_TEXT)}</p>` : ""}
 
       ${introCards.length ? `<div class="info-grid">${introCards.join("")}</div>` : ""}
 
@@ -131,7 +131,7 @@
 
       <div class="actions-row">
         <button class="btn btn-primary" id="start-task-btn" type="button">
-          ${config.ENABLE_PRACTICE_BLOCK && config.PRACTICE_TRIAL_COUNT > 0 ? "Begin Practice" : "Start Timed Block"}
+          ${config.ENABLE_PRACTICE_BLOCK && config.PRACTICE_TRIAL_COUNT > 0 ? "Begin Practice" : "Start"}
         </button>
       </div>
     `;
@@ -183,7 +183,7 @@
     state.mainDeadlinePerf = performance.now() + config.WORK_PERIOD_SECONDS * 1000;
 
     renderTaskScaffold({
-      title: "Timed block",
+      title: "",
       subtitle: "",
       timerText: formatCountdown(config.WORK_PERIOD_SECONDS),
       statusClass: "is-active"
@@ -202,7 +202,7 @@
     app.innerHTML = `
       <div class="task-header">
         <div>
-          <h1 class="panel-title compact-title">${escapeHtml(title)}</h1>
+          ${title ? `<h1 class="panel-title compact-title">${escapeHtml(title)}</h1>` : ""}
           ${subtitle ? `<p class="panel-copy compact-copy">${escapeHtml(subtitle)}</p>` : ""}
         </div>
         <div class="status-pill ${statusClass}" id="timer-pill">${timerText}</div>
@@ -261,7 +261,6 @@
           <button class="btn btn-primary" id="submit-btn" type="submit">Submit</button>
         </form>
 
-        <p class="input-help">Enter a single whole-number sum, then press Enter or click Submit.</p>
         <div class="feedback" id="feedback" aria-live="assertive"></div>
       </section>
     `;
@@ -381,9 +380,7 @@
     };
 
     if (config.SHOW_IMMEDIATE_FEEDBACK) {
-      feedback.textContent = trialRecord.isCorrect
-        ? "Correct"
-        : `Incorrect. Correct answer: ${trialRecord.correctAnswer}`;
+      feedback.textContent = trialRecord.isCorrect ? "correct" : "incorrect";
       feedback.className = `feedback ${trialRecord.isCorrect ? "is-correct" : "is-incorrect"}`;
       state.feedbackTimerId = window.setTimeout(advance, config.FEEDBACK_DURATION_MS);
     } else {
@@ -486,7 +483,7 @@
       </div>
 
       <div class="actions-row">
-        <button class="btn btn-primary" id="start-main-btn" type="button">Start Timed Block</button>
+        <button class="btn btn-primary" id="start-main-btn" type="button">Start</button>
       </div>
     `;
 
@@ -558,7 +555,7 @@
 
     app.innerHTML = `
       <h1 class="panel-title">Final summary</h1>
-      <p class="panel-copy">${escapeHtml(config.SUMMARY_TEXT)}</p>
+      ${config.SUMMARY_TEXT ? `<p class="panel-copy">${escapeHtml(config.SUMMARY_TEXT)}</p>` : ""}
 
       ${summaryCards.length ? `<div class="summary-grid narrow-grid">${summaryCards.join("")}</div>` : ""}
 
