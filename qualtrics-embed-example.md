@@ -9,7 +9,7 @@ This example assumes the task is hosted on GitHub Pages and embedded in a Qualtr
   <iframe
     id="apt-frame"
     title="Arithmetic Performance Task"
-    src="https://YOUR-USERNAME.github.io/YOUR-REPO/?participantId=${e://Field/ResponseID}&sessionId=${e://Field/SessionID}&condition=${e://Field/Condition}"
+    src="https://marcianolab.github.io/serial-performances-math-competition-experiment/?participantId=${e://Field/ResponseID}&sessionId=${e://Field/SessionID}&condition=${e://Field/Condition}"
     style="width:100%;height:760px;border:0;border-radius:18px;overflow:hidden;background:#fff;"
     allow="fullscreen"
     referrerpolicy="strict-origin-when-cross-origin"
@@ -21,7 +21,6 @@ This example assumes the task is hosted on GitHub Pages and embedded in a Qualtr
 
 ```javascript
 Qualtrics.SurveyEngine.addOnload(function () {
-  var frame = document.getElementById("apt-frame");
   var nextButton = document.getElementById("NextButton");
   var trialLogs = [];
 
@@ -38,6 +37,7 @@ Qualtrics.SurveyEngine.addOnload(function () {
     setDisplay("#ProgressBar", "none");
     setDisplay(".Separator", "none");
     document.body.style.background = "#f3f6fb";
+
     if (nextButton) {
       nextButton.style.display = "none";
     }
@@ -49,6 +49,7 @@ Qualtrics.SurveyEngine.addOnload(function () {
     setDisplay("#ProgressBar", "");
     setDisplay(".Separator", "");
     document.body.style.background = "";
+
     if (nextButton) {
       nextButton.style.display = "";
     }
@@ -63,24 +64,67 @@ Qualtrics.SurveyEngine.addOnload(function () {
 
     if (data.eventType === "trial") {
       trialLogs.push(data.payload);
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_last_trial_json", JSON.stringify(data.payload));
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_trial_count", String(trialLogs.length));
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_last_prompt", data.payload.prompt || "");
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_last_accuracy", data.payload.isCorrect ? "1" : "0");
+
+      Qualtrics.SurveyEngine.setEmbeddedData(
+        "apt_last_trial_json",
+        JSON.stringify(data.payload)
+      );
+      Qualtrics.SurveyEngine.setEmbeddedData(
+        "apt_trial_count",
+        String(trialLogs.length)
+      );
+      Qualtrics.SurveyEngine.setEmbeddedData(
+        "apt_last_prompt",
+        data.payload.prompt || ""
+      );
+      Qualtrics.SurveyEngine.setEmbeddedData(
+        "apt_last_accuracy",
+        data.payload.isCorrect ? "1" : "0"
+      );
+
+      return;
     }
 
     if (data.eventType === "completed") {
       var summary = data.payload.summary || {};
 
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_summary_json", JSON.stringify(summary));
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_correct", String(summary.correct || 0));
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_attempted", String(summary.attempted || 0));
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_accuracy", summary.accuracy || "");
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_mean_rt_ms", String(summary.meanRtMs || ""));
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_target_met", summary.targetMet ? "1" : "0");
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_trials_json", JSON.stringify(data.payload.trials || []));
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_practice_trials_json", JSON.stringify(data.payload.practiceTrials || []));
+      Qualtrics.SurveyEngine.setEmbeddedData(
+        "apt_summary_json",
+        JSON.stringify(summary)
+      );
+      Qualtrics.SurveyEngine.setEmbeddedData(
+        "apt_correct",
+        String(summary.correct || 0)
+      );
+      Qualtrics.SurveyEngine.setEmbeddedData(
+        "apt_attempted",
+        String(summary.attempted || 0)
+      );
+      Qualtrics.SurveyEngine.setEmbeddedData(
+        "apt_accuracy",
+        summary.accuracy || ""
+      );
+      Qualtrics.SurveyEngine.setEmbeddedData(
+        "apt_mean_rt_ms",
+        String(summary.meanRtMs || "")
+      );
+      Qualtrics.SurveyEngine.setEmbeddedData(
+        "apt_target_met",
+        summary.targetMet ? "1" : "0"
+      );
+      Qualtrics.SurveyEngine.setEmbeddedData(
+        "apt_trials_json",
+        JSON.stringify(data.payload.trials || [])
+      );
+      Qualtrics.SurveyEngine.setEmbeddedData(
+        "apt_practice_trials_json",
+        JSON.stringify(data.payload.practiceTrials || [])
+      );
 
+      return;
+    }
+
+    if (data.eventType === "continue") {
       restoreQualtricsChrome();
       window.removeEventListener("message", onTaskMessage);
 
