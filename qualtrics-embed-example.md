@@ -147,19 +147,66 @@ Qualtrics.SurveyEngine.addOnload(function () {
 ## 3) Embedded Data Variables (add to qualtrics)
 
 ```
+| Variable                   | What it stores                        |
+| -------------------------- | ------------------------------------- |
+| `SessionID`                | Your session or wave label            |
+| `Condition`                | Your experimental condition           |
+| `apt_last_trial_json`      | Full data for the most recent trial   |
+| `apt_trial_count`          | Number of completed trials so far     |
+| `apt_last_prompt`          | Most recent arithmetic item shown     |
+| `apt_last_accuracy`        | Whether most recent trial was correct |
+| `apt_summary_json`         | Full final summary object             |
+| `apt_correct`              | Total correct in main block           |
+| `apt_attempted`            | Total attempted in main block         |
+| `apt_accuracy`             | Accuracy in main block                |
+| `apt_mean_rt_ms`           | Mean RT in milliseconds               |
+| `apt_target_met`           | Whether target was met                |
+| `apt_trials_json`          | All main-block trials                 |
+| `apt_practice_trials_json` | All practice trials                   |
+
+
 SessionID
+A session or batch identifier you define. Useful if you want to mark participants as belonging to a specific wave, run, lab session, or dataset.
+
 Condition
+An experimental condition label you define, such as A, B, feedback_on, feedback_off, target_high, and so on.
+
+ResponseID
+You do not need to create this one manually. It is built into Qualtrics already. It uniquely identifies the participant’s survey response and is often passed into the task as participantId.
+
 apt_last_trial_json
+A JSON string containing the full data from the most recent trial. Useful for debugging or checking exactly what happened on the latest item.
+
 apt_trial_count
+The number of trials completed so far. In your current Qualtrics script, this grows with each received "trial" message.
+
 apt_last_prompt
+The arithmetic prompt from the most recent trial, for example something like 24 + 51 + 38.
+
 apt_last_accuracy
+Whether the most recent response was correct. In your current setup this is stored as:
+1 = correct
+0 = incorrect
+
 apt_summary_json
+A JSON string containing the final summary object for the main timed block. This is the most complete summary field.
+
 apt_correct
+Number of correct responses in the main timed block.
+
 apt_attempted
+Number of non-timeout trials attempted in the main timed block.
+
 apt_accuracy
+Accuracy in the main timed block, usually as a formatted percentage string such as 83%.
+
 apt_mean_rt_ms
+Mean response time for attempted main-block trials, in milliseconds.
+
 apt_target_met
-apt_trials_json
-apt_practice_trials_json
+Whether the participant met the performance target.
+In your current setup:
+1 = yes
+0 = no
 ```
 
