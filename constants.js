@@ -20,7 +20,7 @@ window.TASK_DEFAULTS = Object.freeze({
   INPUT_MAX_LENGTH: 5,
   COUNTDOWN_WARNING_SECONDS: 15,
 
-  POST_MESSAGE_NAMESPACE: "addition-task",
+  POST_MESSAGE_NAMESPACE: "arithmetic-task",
   POST_MESSAGE_TARGET_ORIGIN: "*",
 
   INTRO_TEXT: "",
