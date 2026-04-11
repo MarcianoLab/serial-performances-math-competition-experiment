@@ -559,14 +559,12 @@
 
       ${summaryCards.length ? `<div class="summary-grid narrow-grid">${summaryCards.join("")}</div>` : ""}
 
-      <div class="actions-row ${config.ALLOW_RESTART ? "" : "is-hidden"}">
-        <button class="btn btn-secondary" id="restart-btn" type="button">Restart Task</button>
+      <div class="actions-row">
+        <button class="btn btn-primary" id="continue-btn" type="button">Continue</button>
       </div>
     `;
 
-    if (config.ALLOW_RESTART) {
-      document.getElementById("restart-btn").addEventListener("click", restartTask);
-    }
+    document.getElementById("continue-btn").addEventListener("click", continueToQualtrics);
 
     postTaskMessage("completed", {
       participant: getParticipantMeta(),
@@ -607,6 +605,21 @@
       practiceAttempted: state.practiceTrials.length
     };
   }
+
+  function continueToQualtrics() {
+  postTaskMessage("continue", {
+    participant: getParticipantMeta(),
+    summary: buildSummary(),
+    taskStartedAtIso: state.taskStartedAtIso,
+    mainBlockStartedAtIso: state.mainBlockStartedAtIso,
+    mainBlockEndedAtIso: state.mainBlockEndedAtIso
+  });
+
+  // Optional fallback for standalone testing
+  if (window.parent === window) {
+    restartTask();
+  }
+}
 
   function updateMainPanels() {
     const isPractice = state.phase === "practice";
