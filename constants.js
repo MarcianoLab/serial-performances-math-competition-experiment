@@ -8,6 +8,9 @@ window.TASK_DEFAULTS = Object.freeze({
   PERFORMANCE_TARGET_CORRECT: 5,
   SHOW_TARGET_PANEL: true,
 
+  ALLOW_TARGET_INPUT: false,
+  DEFAULT_TARGET_VALUE: 5,
+  
   ENABLE_PRACTICE_BLOCK: true,
   SHOW_PRACTICE_FEEDBACK: true,
   SHOW_MAIN_FEEDBACK: true,
@@ -66,6 +69,8 @@ window.TASK_DEFAULTS = Object.freeze({
     showTrialNumber: "SHOW_TRIAL_NUMBER_LABEL",
     showSummaryCorrect: "SHOW_SUMMARY_CORRECT_CARD",
     showSummaryTarget: "SHOW_SUMMARY_TARGET_MET_CARD",
-    targetOrigin: "POST_MESSAGE_TARGET_ORIGIN"
+    targetOrigin: "POST_MESSAGE_TARGET_ORIGIN",
+    allowTargetInput: "ALLOW_TARGET_INPUT",
+    defaultTargetValue: "DEFAULT_TARGET_VALUE"
   })
 });
