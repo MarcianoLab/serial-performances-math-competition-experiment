@@ -92,75 +92,81 @@ if (document.readyState === "loading") {
   }
 
   function renderIntro() {
-    state.phase = "intro";
-    clearTimers();
+  state.phase = "intro";
+  clearTimers();
 
-    const introCards = [];
+  const introCards = [];
+  const selectedBlockSeconds =
+    config.BLOCK_TYPE === "practice" ? config.PRACTICE_PERIOD_SECONDS : config.WORK_PERIOD_SECONDS;
 
-    if (config.SHOW_INTRO_TIMED_WORK_PERIOD) {
-      introCards.push(createInfoCard("Time", formatSeconds(config.WORK_PERIOD_SECONDS)));
-    }
-
-    if (config.SHOW_INTRO_PERFORMANCE_TARGET) {
-      introCards.push(createInfoCard("Performance target", `${config.PERFORMANCE_TARGET_CORRECT} correct`));
-    }
-
-    if (config.SHOW_INTRO_ITEM_FORMAT) {
-      introCards.push(
-        createInfoCard("Item format", `${config.MIN_ADDENDS}-${config.MAX_ADDENDS} two-digit numbers`)
-      );
-    }
-
-    if (config.SHOW_INTRO_IMMEDIATE_FEEDBACK) {
-      introCards.push(createInfoCard("Immediate feedback", config.SHOW_IMMEDIATE_FEEDBACK ? "On" : "Off"));
-    }
-
-    app.innerHTML = `
-      <h1 class="panel-title">${escapeHtml(config.APP_NAME)}</h1>
-      ${config.INTRO_TEXT ? `<p class="panel-copy">${escapeHtml(config.INTRO_TEXT)}</p>` : ""}
-
-      ${introCards.length ? `<div class="info-grid">${introCards.join("")}</div>` : ""}
-
-      ${
-        config.SHOW_INTRO_INSTRUCTIONS
-          ? `<div class="callout"><strong>Instructions.</strong> Solve each addition problem as quickly and accurately as possible. Submit one whole-number answer per item.</div>`
-          : ""
-      }
-
-      ${
-        config.ENABLE_PRACTICE_BLOCK && config.PRACTICE_TRIAL_COUNT > 0
-          ? `<div class="callout subtle-callout">${escapeHtml(config.PRACTICE_TEXT)} Practice items are not counted toward the final target.</div>`
-          : ""
-      }
-
-      <div class="actions-row">
-        <button class="btn btn-primary" id="start-task-btn" type="button">
-          ${config.ENABLE_PRACTICE_BLOCK && config.PRACTICE_TRIAL_COUNT > 0 ? "Begin Practice" : "Start"}
-        </button>
-      </div>
-    `;
-
-    const startButton = document.getElementById("start-task-btn");
-    startButton.addEventListener("click", () => {
-  if (!state.taskStartedAtIso) {
-    state.taskStartedAtIso = nowIso();
+  if (config.SHOW_INTRO_TIMED_WORK_PERIOD) {
+    introCards.push(createInfoCard("Time", formatSeconds(selectedBlockSeconds)));
   }
 
-  // Logic to determine which block to start based on Qualtrics input
-  if (config.BLOCK_TYPE === "practice") {
-    startPracticeBlock();
-  } else if (config.BLOCK_TYPE === "main") {
-    startMainBlock();
-  } else {
-    // Default: run practice then main (original behavior)
-    if (config.ENABLE_PRACTICE_BLOCK && config.PRACTICE_TRIAL_COUNT > 0) {
+  if (config.SHOW_INTRO_PERFORMANCE_TARGET && config.BLOCK_TYPE !== "practice") {
+    introCards.push(createInfoCard("Performance target", `${config.PERFORMANCE_TARGET_CORRECT} correct`));
+  }
+
+  if (config.SHOW_INTRO_ITEM_FORMAT) {
+    introCards.push(
+      createInfoCard("Item format", `${config.MIN_ADDENDS}-${config.MAX_ADDENDS} two-digit numbers`)
+    );
+  }
+
+  if (config.SHOW_INTRO_IMMEDIATE_FEEDBACK) {
+    introCards.push(createInfoCard("Immediate feedback", config.SHOW_IMMEDIATE_FEEDBACK ? "On" : "Off"));
+  }
+
+  app.innerHTML = `
+    <h1 class="panel-title">${escapeHtml(config.APP_NAME)}</h1>
+    ${config.INTRO_TEXT ? `<p class="panel-copy">${escapeHtml(config.INTRO_TEXT)}</p>` : ""}
+
+    ${introCards.length ? `<div class="info-grid">${introCards.join("")}</div>` : ""}
+
+    ${
+      config.SHOW_INTRO_INSTRUCTIONS
+        ? `<div class="callout"><strong>Instructions.</strong> Solve each addition problem as quickly and accurately as possible. Submit one whole-number answer per item.</div>`
+        : ""
+    }
+
+    ${
+      config.BLOCK_TYPE === "sequence" && config.ENABLE_PRACTICE_BLOCK
+        ? `<div class="callout subtle-callout">${escapeHtml(config.PRACTICE_TEXT)} Practice items are not counted toward the final target.</div>`
+        : ""
+    }
+
+    <div class="actions-row">
+      <button class="btn btn-primary" id="start-task-btn" type="button">
+        ${config.BLOCK_TYPE === "practice" ? "Start Practice" : config.BLOCK_TYPE === "main" ? "Start" : "Begin Practice"}
+      </button>
+    </div>
+  `;
+
+  const startButton = document.getElementById("start-task-btn");
+  startButton.addEventListener("click", () => {
+    if (!state.taskStartedAtIso) {
+      state.taskStartedAtIso = nowIso();
+    }
+
+    postTaskMessage("started", {
+      config: getPublicConfig(),
+      participant: getParticipantMeta(),
+      startedAtIso: state.taskStartedAtIso
+    });
+
+    if (config.BLOCK_TYPE === "practice") {
       startPracticeBlock();
-    } else {
+    } else if (config.BLOCK_TYPE === "main") {
       startMainBlock();
+    } else {
+      if (config.ENABLE_PRACTICE_BLOCK) {
+        startPracticeBlock();
+      } else {
+        startMainBlock();
+      }
     }
-  }
-});
-  }
+  });
+}
 
   function createInfoCard(label, value) {
     return `
@@ -171,37 +177,40 @@ if (document.readyState === "loading") {
     `;
   }
 
-  function startPracticeBlock() {
-    state.phase = "practice";
-    state.mainDeadlinePerf = performance.now() + config.PRACTICE_PERIOD_SECONDS * 1000;
-    
-    renderTaskScaffold({
-      title: "Practice",
-      subtitle: "This is a timed practice block.",
-      timerText: formatCountdown(config.PRACTICE_PERIOD_SECONDS),
-      statusClass: "is-neutral"
-    });
-    
-    presentNextTrial("practice");
-  }
+ function startPracticeBlock() {
+  clearTimers();
+  state.phase = "practice";
+  state.mainDeadlinePerf = performance.now() + config.PRACTICE_PERIOD_SECONDS * 1000;
+
+  renderTaskScaffold({
+    title: "Practice",
+    subtitle: "",
+    timerText: formatCountdown(config.PRACTICE_PERIOD_SECONDS),
+    statusClass: "is-neutral"
+  });
+
+  updateMainPanels();
+  state.mainTimerId = window.setInterval(updateMainTimer, 100);
+  presentNextTrial("practice");
+}
 
   function startMainBlock() {
-    clearTimers();
-    state.phase = "main";
-    state.mainBlockStartedAtIso = nowIso();
-    state.mainDeadlinePerf = performance.now() + config.WORK_PERIOD_SECONDS * 1000;
+  clearTimers();
+  state.phase = "main";
+  state.mainBlockStartedAtIso = nowIso();
+  state.mainDeadlinePerf = performance.now() + config.WORK_PERIOD_SECONDS * 1000;
 
-    renderTaskScaffold({
-      title: "",
-      subtitle: "",
-      timerText: formatCountdown(config.WORK_PERIOD_SECONDS),
-      statusClass: "is-active"
-    });
+  renderTaskScaffold({
+    title: "",
+    subtitle: "",
+    timerText: formatCountdown(config.WORK_PERIOD_SECONDS),
+    statusClass: "is-active"
+  });
 
-    updateMainPanels();
-    state.mainTimerId = window.setInterval(updateMainTimer, 100);
-    pesentNextTrial("practice");
-  }
+  updateMainPanels();
+  state.mainTimerId = window.setInterval(updateMainTimer, 100);
+  presentNextTrial("main");
+}
 
   function renderTaskScaffold({ title, subtitle, timerText, statusClass }) {
     const showTrialsPanel = Boolean(config.SHOW_TRIALS_PANEL);
@@ -341,63 +350,62 @@ if (document.readyState === "loading") {
   }
 
   function handleAnswerSubmit(event) {
-    event.preventDefault();
+  event.preventDefault();
 
-    if (!state.currentTrial || state.taskFinished) {
-      return;
-    }
-
-    const answerInput = document.getElementById("answer-input");
-    const submitButton = document.getElementById("submit-btn");
-    const rawValue = answerInput.value.trim();
-
-    if (rawValue === "") {
-      answerInput.setCustomValidity("Please enter a response before submitting.");
-      answerInput.reportValidity();
-      return;
-    }
-
-    const responseValue = Number.parseInt(rawValue, 10);
-
-    if (!Number.isInteger(responseValue)) {
-      answerInput.setCustomValidity("Responses must be whole numbers.");
-      answerInput.reportValidity();
-      return;
-    }
-
-    answerInput.disabled = true;
-    submitButton.disabled = true;
-
-    const trialRecord = finalizeCurrentTrial({
-      response: responseValue,
-      timedOut: false
-    });
-
-    const feedback = document.getElementById("feedback");
-    const advance = () => {
-      if (trialRecord.phase === "practice") {
-        if (state.practiceTrialCounter >= config.PRACTICE_TRIAL_COUNT) {
-          finishPracticeBlock();
-        } else {
-          presentNextTrial("practice");
-        }
-      } else if (isMainBlockExpired()) {
-        finishTask();
-      } else {
-        presentNextTrial("main");
-      }
-    };
-
-    if (config.SHOW_IMMEDIATE_FEEDBACK) {
-      feedback.textContent = trialRecord.isCorrect ? "correct" : "incorrect";
-      feedback.className = `feedback ${trialRecord.isCorrect ? "is-correct" : "is-incorrect"}`;
-      state.feedbackTimerId = window.setTimeout(advance, config.FEEDBACK_DURATION_MS);
-    } else {
-      feedback.textContent = "";
-      feedback.className = "feedback";
-      window.setTimeout(advance, 0);
-    }
+  if (!state.currentTrial || state.taskFinished) {
+    return;
   }
+
+  const answerInput = document.getElementById("answer-input");
+  const submitButton = document.getElementById("submit-btn");
+  const rawValue = answerInput.value.trim();
+
+  if (rawValue === "") {
+    answerInput.setCustomValidity("Please enter a response before submitting.");
+    answerInput.reportValidity();
+    return;
+  }
+
+  const responseValue = Number.parseInt(rawValue, 10);
+
+  if (!Number.isInteger(responseValue)) {
+    answerInput.setCustomValidity("Responses must be whole numbers.");
+    answerInput.reportValidity();
+    return;
+  }
+
+  answerInput.disabled = true;
+  submitButton.disabled = true;
+
+  const trialRecord = finalizeCurrentTrial({
+    response: responseValue,
+    timedOut: false
+  });
+
+  const feedback = document.getElementById("feedback");
+  const advance = () => {
+    if (isMainBlockExpired()) {
+      if (state.phase === "practice" && config.BLOCK_TYPE === "sequence") {
+        finishPracticeBlock();
+      } else {
+        finishTask();
+      }
+      return;
+    }
+
+    presentNextTrial(trialRecord.phase);
+  };
+
+  if (config.SHOW_IMMEDIATE_FEEDBACK) {
+    feedback.textContent = trialRecord.isCorrect ? "correct" : "incorrect";
+    feedback.className = `feedback ${trialRecord.isCorrect ? "is-correct" : "is-incorrect"}`;
+    state.feedbackTimerId = window.setTimeout(advance, config.FEEDBACK_DURATION_MS);
+  } else {
+    feedback.textContent = "";
+    feedback.className = "feedback";
+    window.setTimeout(advance, 0);
+  }
+}
 
   function finalizeCurrentTrial({ response, timedOut }) {
     const current = state.currentTrial;
@@ -452,7 +460,7 @@ if (document.readyState === "loading") {
       isCorrect,
       timedOut,
       rtMs,
-      remainingTimeMs: current.phase === "main" ? getRemainingTimeMs() : null,
+      remainingTimeMs: (current.phase === "main" || current.phase === "practice") ? getRemainingTimeMs() : null,
       targetCorrect: config.PERFORMANCE_TARGET_CORRECT
     };
 
@@ -470,15 +478,17 @@ if (document.readyState === "loading") {
   }
 
   function finishPracticeBlock() {
-    state.practiceCompleted = true;
-    state.phase = "practice-summary";
-    clearFeedbackTimer();
+  state.practiceCompleted = true;
+  state.phase = "practice-summary";
+  clearFeedbackTimer();
+  clearMainTimer();
 
+  if (config.BLOCK_TYPE === "sequence") {
     const accuracy = getAccuracy(state.practiceTrials);
 
     app.innerHTML = `
       <h1 class="panel-title">Practice complete</h1>
-      <p class="panel-copy">The main block will begin when you press the button below.</p>
+      <p class="panel-copy">Press below to begin the main block.</p>
 
       <div class="summary-grid narrow-grid">
         <div class="summary-card">
@@ -497,39 +507,47 @@ if (document.readyState === "loading") {
     `;
 
     document.getElementById("start-main-btn").addEventListener("click", startMainBlock);
+    return;
   }
+
+  finishTask();
+}
 
   function updateMainTimer() {
-    if (state.phase !== "main" || state.taskFinished) {
-      return;
-    }
-
-    const remainingMs = getRemainingTimeMs();
-    const timerPill = document.getElementById("timer-pill");
-
-    if (timerPill) {
-      timerPill.textContent = formatCountdownFromMs(remainingMs);
-      timerPill.classList.toggle("is-warning", remainingMs <= config.COUNTDOWN_WARNING_SECONDS * 1000);
-    }
-
-    if (remainingMs <= 0) {
-      handleMainTimeExpired();
-    }
+  if ((state.phase !== "main" && state.phase !== "practice") || state.taskFinished) {
+    return;
   }
+
+  const remainingMs = getRemainingTimeMs();
+  const timerPill = document.getElementById("timer-pill");
+
+  if (timerPill) {
+    timerPill.textContent = formatCountdownFromMs(remainingMs);
+    timerPill.classList.toggle("is-warning", remainingMs <= config.COUNTDOWN_WARNING_SECONDS * 1000);
+  }
+
+  if (remainingMs <= 0) {
+    handleMainTimeExpired();
+  }
+}
 
   function handleMainTimeExpired() {
-    clearMainTimer();
+  clearMainTimer();
 
-    if (state.phase !== "main" || state.taskFinished) {
-      return;
-    }
+  if ((state.phase !== "main" && state.phase !== "practice") || state.taskFinished) {
+    return;
+  }
 
-    if (state.currentTrial) {
-      finalizeCurrentTrial({ response: null, timedOut: true });
-    }
+  if (state.currentTrial) {
+    finalizeCurrentTrial({ response: null, timedOut: true });
+  }
 
+  if (state.phase === "practice" && config.BLOCK_TYPE === "sequence") {
+    finishPracticeBlock();
+  } else {
     finishTask();
   }
+}
 
   function finishTask() {
     if (state.taskFinished) {
@@ -588,32 +606,36 @@ if (document.readyState === "loading") {
   }
 
   function buildSummary() {
-    const attemptedTrials = state.mainTrials.filter((trial) => !trial.timedOut);
-    const accuracy = getAccuracy(attemptedTrials);
-    const meanRtMs = attemptedTrials.length
-      ? Math.round(
-          attemptedTrials.reduce((total, trial) => total + (typeof trial.rtMs === "number" ? trial.rtMs : 0), 0) /
-            attemptedTrials.length
-        )
-      : null;
+  const summarizePracticeOnly = config.BLOCK_TYPE === "practice";
+  const sourceTrials = summarizePracticeOnly ? state.practiceTrials : state.mainTrials;
+  const attemptedTrials = sourceTrials.filter((trial) => !trial.timedOut);
+  const correctCount = summarizePracticeOnly ? state.practiceCorrect : state.mainCorrect;
+  const accuracy = getAccuracy(attemptedTrials);
+  const meanRtMs = attemptedTrials.length
+    ? Math.round(
+        attemptedTrials.reduce((total, trial) => total + (typeof trial.rtMs === "number" ? trial.rtMs : 0), 0) /
+          attemptedTrials.length
+      )
+    : null;
 
-    return {
-      taskName: config.APP_NAME,
-      taskVersion: config.TASK_VERSION,
-      workPeriodSeconds: config.WORK_PERIOD_SECONDS,
-      targetCorrect: config.PERFORMANCE_TARGET_CORRECT,
-      attempted: attemptedTrials.length,
-      correct: state.mainCorrect,
-      incorrect: attemptedTrials.length - state.mainCorrect,
-      accuracy,
-      meanRtMs,
-      bestStreak: state.bestStreak,
-      targetMet: state.mainCorrect >= config.PERFORMANCE_TARGET_CORRECT,
-      practiceEnabled: config.ENABLE_PRACTICE_BLOCK,
-      practiceCorrect: state.practiceCorrect,
-      practiceAttempted: state.practiceTrials.length
-    };
-  }
+  return {
+    taskName: config.APP_NAME,
+    taskVersion: config.TASK_VERSION,
+    blockType: config.BLOCK_TYPE,
+    workPeriodSeconds: summarizePracticeOnly ? config.PRACTICE_PERIOD_SECONDS : config.WORK_PERIOD_SECONDS,
+    targetCorrect: config.PERFORMANCE_TARGET_CORRECT,
+    attempted: attemptedTrials.length,
+    correct: correctCount,
+    incorrect: attemptedTrials.length - correctCount,
+    accuracy,
+    meanRtMs,
+    bestStreak: summarizePracticeOnly ? null : state.bestStreak,
+    targetMet: summarizePracticeOnly ? null : state.mainCorrect >= config.PERFORMANCE_TARGET_CORRECT,
+    practiceEnabled: config.ENABLE_PRACTICE_BLOCK,
+    practiceCorrect: state.practiceCorrect,
+    practiceAttempted: state.practiceTrials.length
+  };
+}
 
   function continueToQualtrics() {
   postTaskMessage("continue", {
