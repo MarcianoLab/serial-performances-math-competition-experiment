@@ -8,7 +8,6 @@ window.TASK_DEFAULTS = Object.freeze({
   PERFORMANCE_TARGET_CORRECT: 5,
 
   ENABLE_PRACTICE_BLOCK: true,
-  PRACTICE_TRIAL_COUNT: 5,
   SHOW_IMMEDIATE_FEEDBACK: true,
   FEEDBACK_DURATION_MS: 700,
 
@@ -50,7 +49,6 @@ window.TASK_DEFAULTS = Object.freeze({
     blockType: "BLOCK_TYPE",
     target: "PERFORMANCE_TARGET_CORRECT",
     practice: "ENABLE_PRACTICE_BLOCK",
-    practiceTrials: "PRACTICE_TRIAL_COUNT",
     feedback: "SHOW_IMMEDIATE_FEEDBACK",
     minAddends: "MIN_ADDENDS",
     maxAddends: "MAX_ADDENDS",
