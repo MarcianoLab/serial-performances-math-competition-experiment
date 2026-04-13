@@ -33,7 +33,11 @@
     taskFinished: false
   };
 
+if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initialize);
+} else {
+  initialize();
+}
 
   function initialize() {
     app.setAttribute("aria-busy", "false");
