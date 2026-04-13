@@ -3,6 +3,8 @@ window.TASK_DEFAULTS = Object.freeze({
   TASK_VERSION: "1.1.1",
 
   WORK_PERIOD_SECONDS: 30,
+  PRACTICE_PERIOD_SECONDS: 30, 
+  BLOCK_TYPE: "sequence",       
   PERFORMANCE_TARGET_CORRECT: 5,
 
   ENABLE_PRACTICE_BLOCK: true,
@@ -44,6 +46,8 @@ window.TASK_DEFAULTS = Object.freeze({
 
   URL_PARAM_MAP: Object.freeze({
     workSeconds: "WORK_PERIOD_SECONDS",
+    practiceSeconds: "PRACTICE_PERIOD_SECONDS", 
+    blockType: "BLOCK_TYPE",
     target: "PERFORMANCE_TARGET_CORRECT",
     practice: "ENABLE_PRACTICE_BLOCK",
     practiceTrials: "PRACTICE_TRIAL_COUNT",
