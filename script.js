@@ -116,7 +116,14 @@
     }
 
     if (config.SHOW_INTRO_IMMEDIATE_FEEDBACK) {
-      introCards.push(createInfoCard("Immediate feedback", config.SHOW_IMMEDIATE_FEEDBACK ? "On" : "Off"));
+      const feedbackOn =
+        config.BLOCK_TYPE === "practice"
+          ? config.SHOW_PRACTICE_FEEDBACK
+          : config.BLOCK_TYPE === "main"
+          ? config.SHOW_MAIN_FEEDBACK
+          : config.SHOW_PRACTICE_FEEDBACK || config.SHOW_MAIN_FEEDBACK;
+    
+      introCards.push(createInfoCard("Immediate feedback", feedbackOn ? "On" : "Off"));
     }
 
     app.innerHTML = `
@@ -358,6 +365,10 @@
     };
   }
 
+  function shouldShowFeedbackForPhase(phase) {
+  return phase === "practice" ? config.SHOW_PRACTICE_FEEDBACK : config.SHOW_MAIN_FEEDBACK;
+}
+
  function handleAnswerSubmit(event) {
     event.preventDefault();
 
@@ -405,14 +416,14 @@
       presentNextTrial(trialRecord.phase);
     };
 
-    if (config.SHOW_IMMEDIATE_FEEDBACK && config.FEEDBACK_DURATION_MS > 0) {
+    if (shouldShowFeedbackForPhase(trialRecord.phase)) {
       feedback.textContent = trialRecord.isCorrect ? "correct" : "incorrect";
       feedback.className = `feedback ${trialRecord.isCorrect ? "is-correct" : "is-incorrect"}`;
       state.feedbackTimerId = window.setTimeout(advance, config.FEEDBACK_DURATION_MS);
     } else {
       feedback.textContent = "";
       feedback.className = "feedback";
-      state.feedbackTimerId = window.setTimeout(advance, 0);
+      window.setTimeout(advance, 0);
     }
   }
 
@@ -747,7 +758,8 @@
       blockType: config.BLOCK_TYPE,
       performanceTargetCorrect: config.PERFORMANCE_TARGET_CORRECT,
       practiceEnabled: config.ENABLE_PRACTICE_BLOCK,
-      immediateFeedback: config.SHOW_IMMEDIATE_FEEDBACK,
+      practiceFeedback: config.SHOW_PRACTICE_FEEDBACK,
+      mainFeedback: config.SHOW_MAIN_FEEDBACK,
       minAddends: config.MIN_ADDENDS,
       maxAddends: config.MAX_ADDENDS,
       minNumber: config.MIN_NUMBER,
