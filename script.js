@@ -358,7 +358,7 @@
     };
   }
 
-  function handleAnswerSubmit(event) {
+ function handleAnswerSubmit(event) {
     event.preventDefault();
 
     if (!state.currentTrial || state.taskFinished) {
@@ -405,14 +405,14 @@
       presentNextTrial(trialRecord.phase);
     };
 
-    if (config.SHOW_IMMEDIATE_FEEDBACK) {
+    if (config.SHOW_IMMEDIATE_FEEDBACK && config.FEEDBACK_DURATION_MS > 0) {
       feedback.textContent = trialRecord.isCorrect ? "correct" : "incorrect";
       feedback.className = `feedback ${trialRecord.isCorrect ? "is-correct" : "is-incorrect"}`;
       state.feedbackTimerId = window.setTimeout(advance, config.FEEDBACK_DURATION_MS);
     } else {
       feedback.textContent = "";
       feedback.className = "feedback";
-      window.setTimeout(advance, 0);
+      state.feedbackTimerId = window.setTimeout(advance, 0);
     }
   }
 
