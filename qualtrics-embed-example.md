@@ -168,6 +168,16 @@ Qualtrics.SurveyEngine.addOnload(function () {
 | `apt_target_met`           | Whether target was met                |
 | `apt_trials_json`          | All main-block trials                 |
 | `apt_practice_trials_json` | All practice trials                   |
+| `p_prompt_X`	             | The question for practice trial X     |
+| `p_correct_X	             | The correct answer for trial X        |
+| `p_respond_X	             | The participant's respond for trial X |
+| `p_rt_X	                   | The response time for  trial X        |
+| `m_prompt_X	               | The question for main trial X         |
+| `m_correct_X	             | The correct answer for main trial X   |
+| `m_respond_X	             | The participant's respond for trial X |
+| `m_rt_X	                   |The response time for main trial X     |
+
+
 
 
 SessionID
@@ -213,5 +223,8 @@ Whether the participant met the performance target.
 In your current setup:
 1 = yes
 0 = no
+
+
+
 ```
 
