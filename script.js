@@ -41,6 +41,13 @@
 
   function initialize() {
     app.setAttribute("aria-busy", "false");
+    
+      console.log("CONFIG DEBUG", {
+      blockType: config.BLOCK_TYPE,
+      practiceFeedback: config.SHOW_PRACTICE_FEEDBACK,
+      mainFeedback: config.SHOW_MAIN_FEEDBACK
+    });
+    
     renderIntro();
     postTaskMessage("ready", {
       config: getPublicConfig(),
