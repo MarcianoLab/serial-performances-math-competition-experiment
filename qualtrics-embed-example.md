@@ -5,15 +5,17 @@ This example assumes the task is hosted on GitHub Pages and embedded in a Qualtr
 ## 1) Question HTML
 
 ```html
-<div id="apt-wrapper" style="width:100%;max-width:980px;margin:0 auto;">
-  <iframe
-    id="apt-frame"
-    title="Arithmetic Performance Task"
-    src="https://marcianolab.github.io/serial-performances-math-competition-experiment/?participantId=${e://Field/ResponseID}&sessionId=${e://Field/SessionID}&condition=${e://Field/Condition}"
-    style="width:100%;height:760px;border:0;border-radius:18px;overflow:hidden;background:#fff;"
-    allow="fullscreen"
-    referrerpolicy="strict-origin-when-cross-origin"
-  ></iframe>
+<div id="apt-outer-container" style="display: flex; justify-content: center; align-items: flex-start; min-height: 80vh; width: 100%; padding: 20px 0;">
+  <div id="apt-wrapper" style="width: 100%; max-width: 900px; transition: height 0.3s ease;">
+    <iframe
+      id="apt-frame"
+      title="Arithmetic Performance Task"
+      src="https://marcianolab.github.io/serial-performances-math-competition-experiment/?participantId=${e://Field/ResponseID}&sessionId=${e://Field/SessionID}&condition=${e://Field/Condition}"
+      style="width: 100%; height: 650px; border: 0; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); background: #fff;"
+      allow="fullscreen"
+      referrerpolicy="strict-origin-when-cross-origin"
+    ></iframe>
+  </div>
 </div>
 ```
 
@@ -36,11 +38,19 @@ Qualtrics.SurveyEngine.addOnload(function () {
     setDisplay("#Buttons", "none");
     setDisplay("#ProgressBar", "none");
     setDisplay(".Separator", "none");
-    document.body.style.background = "#f3f6fb";
-
-    if (nextButton) {
-      nextButton.style.display = "none";
+    
+    // This removes the massive white space Qualtrics adds at the top/bottom
+    var skin = document.querySelector('.Skin .QuestionText');
+    if (skin) skin.style.paddingTop = "0px";
+    
+    var main = document.querySelector('.SkinInner');
+    if (main) {
+        main.style.maxWidth = "100%";
+        main.style.width = "100%";
     }
+
+    document.body.style.background = "#f3f6fb";
+    if (nextButton) nextButton.style.display = "none";
   }
 
   function restoreQualtricsChrome() {
