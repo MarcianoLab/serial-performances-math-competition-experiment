@@ -3,12 +3,13 @@ window.TASK_DEFAULTS = Object.freeze({
   TASK_VERSION: "1.1.1",
 
   WORK_PERIOD_SECONDS: 30,
-  PRACTICE_PERIOD_SECONDS: 30, 
-  BLOCK_TYPE: "sequence",       
+  PRACTICE_PERIOD_SECONDS: 30,
+  BLOCK_TYPE: "sequence",
   PERFORMANCE_TARGET_CORRECT: 5,
 
   ENABLE_PRACTICE_BLOCK: true,
-  SHOW_IMMEDIATE_FEEDBACK: true,
+  SHOW_PRACTICE_FEEDBACK: true,
+  SHOW_MAIN_FEEDBACK: true,
   FEEDBACK_DURATION_MS: 700,
 
   MIN_ADDENDS: 5,
@@ -25,8 +26,7 @@ window.TASK_DEFAULTS = Object.freeze({
   POST_MESSAGE_TARGET_ORIGIN: "*",
 
   INTRO_TEXT: "",
-  PRACTICE_TEXT:
-    "Use the practice block to get comfortable with the response format before the timed block begins.",
+  PRACTICE_TEXT: "Use the practice block to get comfortable with the response format before the timed block begins.",
   SUMMARY_TEXT: "",
 
   SHOW_PROGRESS_BAR: true,
@@ -45,11 +45,12 @@ window.TASK_DEFAULTS = Object.freeze({
 
   URL_PARAM_MAP: Object.freeze({
     workSeconds: "WORK_PERIOD_SECONDS",
-    practiceSeconds: "PRACTICE_PERIOD_SECONDS", 
+    practiceSeconds: "PRACTICE_PERIOD_SECONDS",
     blockType: "BLOCK_TYPE",
     target: "PERFORMANCE_TARGET_CORRECT",
     practice: "ENABLE_PRACTICE_BLOCK",
-    feedback: "SHOW_IMMEDIATE_FEEDBACK",
+    practiceFeedback: "SHOW_PRACTICE_FEEDBACK",
+    mainFeedback: "SHOW_MAIN_FEEDBACK",
     minAddends: "MIN_ADDENDS",
     maxAddends: "MAX_ADDENDS",
     minNumber: "MIN_NUMBER",
