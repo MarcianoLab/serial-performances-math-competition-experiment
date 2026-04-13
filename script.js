@@ -142,22 +142,24 @@ if (document.readyState === "loading") {
 
     const startButton = document.getElementById("start-task-btn");
     startButton.addEventListener("click", () => {
-      if (!state.taskStartedAtIso) {
-        state.taskStartedAtIso = nowIso();
-      }
+  if (!state.taskStartedAtIso) {
+    state.taskStartedAtIso = nowIso();
+  }
 
-      postTaskMessage("started", {
-        config: getPublicConfig(),
-        participant: getParticipantMeta(),
-        startedAtIso: state.taskStartedAtIso
-      });
-
-      if (config.ENABLE_PRACTICE_BLOCK && config.PRACTICE_TRIAL_COUNT > 0) {
-        startPracticeBlock();
-      } else {
-        startMainBlock();
-      }
-    });
+  // Logic to determine which block to start based on Qualtrics input
+  if (config.BLOCK_TYPE === "practice") {
+    startPracticeBlock();
+  } else if (config.BLOCK_TYPE === "main") {
+    startMainBlock();
+  } else {
+    // Default: run practice then main (original behavior)
+    if (config.ENABLE_PRACTICE_BLOCK && config.PRACTICE_TRIAL_COUNT > 0) {
+      startPracticeBlock();
+    } else {
+      startMainBlock();
+    }
+  }
+});
   }
 
   function createInfoCard(label, value) {
@@ -171,12 +173,15 @@ if (document.readyState === "loading") {
 
   function startPracticeBlock() {
     state.phase = "practice";
+    state.mainDeadlinePerf = performance.now() + config.PRACTICE_PERIOD_SECONDS * 1000;
+    
     renderTaskScaffold({
       title: "Practice",
-      subtitle: `Complete ${config.PRACTICE_TRIAL_COUNT} practice item${config.PRACTICE_TRIAL_COUNT === 1 ? "" : "s"}.`,
-      timerText: "Practice",
+      subtitle: "This is a timed practice block.",
+      timerText: formatCountdown(config.PRACTICE_PERIOD_SECONDS),
       statusClass: "is-neutral"
     });
+    
     presentNextTrial("practice");
   }
 
@@ -195,7 +200,7 @@ if (document.readyState === "loading") {
 
     updateMainPanels();
     state.mainTimerId = window.setInterval(updateMainTimer, 100);
-    presentNextTrial("main");
+    pesentNextTrial("practice");
   }
 
   function renderTaskScaffold({ title, subtitle, timerText, statusClass }) {
