@@ -232,7 +232,7 @@
     const showTrialsPanel = Boolean(config.SHOW_TRIALS_PANEL);
     const showAccuracyPanel = Boolean(config.SHOW_ACCURACY_PANEL);
     const showTrialNumberLabel = Boolean(config.SHOW_TRIAL_NUMBER_LABEL);
-    const showTargetPanel = Boolean(config.SHOW_PROGRESS_BAR && state.phase !== "practice");
+    const showTargetPanel = Boolean(config.SHOW_PROGRESS_BAR && config.SHOW_TARGET_PANEL);
 
     app.innerHTML = `
       <div class="task-header">
