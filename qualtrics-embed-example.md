@@ -5,13 +5,13 @@ This example assumes the task is hosted on GitHub Pages and embedded in a Qualtr
 ## 1) Question HTML
 
 ```html
-<div id="apt-outer-container" style="display: flex; justify-content: center; align-items: flex-start; min-height: 80vh; width: 100%; padding: 20px 0;">
-  <div id="apt-wrapper" style="width: 100%; max-width: 900px; transition: height 0.3s ease;">
+<div id="apt-container-wrapper" style="display: none; background: #f3f6fb; justify-content: center; align-items: center; width: 100%; height: auto;">
+  <div id="apt-wrapper" style="width: 100%; max-width: 900px; padding: 10px;">
     <iframe
       id="apt-frame"
       title="Arithmetic Performance Task"
       src="https://marcianolab.github.io/serial-performances-math-competition-experiment/?participantId=${e://Field/ResponseID}&sessionId=${e://Field/SessionID}&condition=${e://Field/Condition}"
-      style="width: 100%; height: 650px; border: 0; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); background: #fff;"
+      style="width: 100%; height: 600px; border: 0; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); background: #fff;"
       allow="fullscreen"
       referrerpolicy="strict-origin-when-cross-origin"
     ></iframe>
@@ -23,6 +23,23 @@ This example assumes the task is hosted on GitHub Pages and embedded in a Qualtr
 
 ```javascript
 Qualtrics.SurveyEngine.addOnload(function () {
+  // 1. SAFETY GUARD: Detect if we are in the Qualtrics Editor/Builder
+  var isEditor = document.body.classList.contains('ControlPanel') || 
+                 document.body.classList.contains('Builder') || 
+                 window.location.href.indexOf('ControlPanel') !== -1;
+
+  if (isEditor) {
+    console.log("Editor mode detected: Task suppressed to allow editing.");
+    var editorContainer = document.getElementById("apt-container-wrapper");
+    if (editorContainer) {
+      editorContainer.style.display = "block"; // Show as a normal box in editor
+      editorContainer.style.position = "relative";
+    }
+    return; // Stop execution for the researcher
+  }
+
+  // 2. INITIALIZATION FOR PARTICIPANTS
+  var q = this;
   var nextButton = document.getElementById("NextButton");
   var trialLogs = [];
 
@@ -34,31 +51,52 @@ Qualtrics.SurveyEngine.addOnload(function () {
   }
 
   function hideQualtricsChrome() {
+    // Hide standard Qualtrics UI
     setDisplay("#Header", "none");
     setDisplay("#Buttons", "none");
     setDisplay("#ProgressBar", "none");
     setDisplay(".Separator", "none");
     
-    // This removes the massive white space Qualtrics adds at the top/bottom
-    var skin = document.querySelector('.Skin .QuestionText');
-    if (skin) skin.style.paddingTop = "0px";
+    // LOCK SCROLLING: Prevents the "toggling"/scrolling behavior
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    // FULLSCREEN PROMOTION: Fix the task to the top of the viewport
+    var container = document.getElementById("apt-container-wrapper");
+    if (container) {
+      container.style.display = "flex"; 
+      container.style.position = "fixed";
+      container.style.top = "0";
+      container.style.left = "0";
+      container.style.width = "100vw";
+      container.style.height = "100vh";
+      container.style.zIndex = "9999";
+    }
     
-    var main = document.querySelector('.SkinInner');
-    if (main) {
-        main.style.maxWidth = "100%";
-        main.style.width = "100%";
+    var iframe = document.getElementById("apt-frame");
+    if (iframe) {
+      iframe.style.height = "96vh"; // Let the iframe fill the fixed container
     }
 
-    document.body.style.background = "#f3f6fb";
-    if (nextButton) nextButton.style.display = "none";
+    if (nextButton) {
+      nextButton.style.display = "none";
+    }
   }
 
   function restoreQualtricsChrome() {
+    // UNLOCK SCROLLING
+    document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
+
+    var container = document.getElementById("apt-container-wrapper");
+    if (container) {
+      container.style.display = "none";
+    }
+
     setDisplay("#Header", "");
     setDisplay("#Buttons", "");
     setDisplay("#ProgressBar", "");
     setDisplay(".Separator", "");
-    document.body.style.background = "";
 
     if (nextButton) {
       nextButton.style.display = "";
@@ -67,86 +105,43 @@ Qualtrics.SurveyEngine.addOnload(function () {
 
   function onTaskMessage(event) {
     var data = event.data;
+    if (!data || data.source !== "arithmetic-task") return;
 
-    if (!data || data.source !== "arithmetic-task") {
-      return;
-    }
-
+    // Handle individual trial logs
     if (data.eventType === "trial") {
       trialLogs.push(data.payload);
-
-      Qualtrics.SurveyEngine.setEmbeddedData(
-        "apt_last_trial_json",
-        JSON.stringify(data.payload)
-      );
-      Qualtrics.SurveyEngine.setEmbeddedData(
-        "apt_trial_count",
-        String(trialLogs.length)
-      );
-      Qualtrics.SurveyEngine.setEmbeddedData(
-        "apt_last_prompt",
-        data.payload.prompt || ""
-      );
-      Qualtrics.SurveyEngine.setEmbeddedData(
-        "apt_last_accuracy",
-        data.payload.isCorrect ? "1" : "0"
-      );
-
+      Qualtrics.SurveyEngine.setEmbeddedData("apt_last_trial_json", JSON.stringify(data.payload));
+      Qualtrics.SurveyEngine.setEmbeddedData("apt_trial_count", String(trialLogs.length));
+      Qualtrics.SurveyEngine.setEmbeddedData("apt_last_accuracy", data.payload.isCorrect ? "1" : "0");
       return;
     }
 
+    // Handle completion summary
     if (data.eventType === "completed") {
       var summary = data.payload.summary || {};
-
-      Qualtrics.SurveyEngine.setEmbeddedData(
-        "apt_summary_json",
-        JSON.stringify(summary)
-      );
-      Qualtrics.SurveyEngine.setEmbeddedData(
-        "apt_correct",
-        String(summary.correct || 0)
-      );
-      Qualtrics.SurveyEngine.setEmbeddedData(
-        "apt_attempted",
-        String(summary.attempted || 0)
-      );
-      Qualtrics.SurveyEngine.setEmbeddedData(
-        "apt_accuracy",
-        summary.accuracy || ""
-      );
-      Qualtrics.SurveyEngine.setEmbeddedData(
-        "apt_mean_rt_ms",
-        String(summary.meanRtMs || "")
-      );
-      Qualtrics.SurveyEngine.setEmbeddedData(
-        "apt_target_met",
-        summary.targetMet ? "1" : "0"
-      );
-      Qualtrics.SurveyEngine.setEmbeddedData(
-        "apt_trials_json",
-        JSON.stringify(data.payload.trials || [])
-      );
-      Qualtrics.SurveyEngine.setEmbeddedData(
-        "apt_practice_trials_json",
-        JSON.stringify(data.payload.practiceTrials || [])
-      );
-
+      Qualtrics.SurveyEngine.setEmbeddedData("apt_summary_json", JSON.stringify(summary));
+      Qualtrics.SurveyEngine.setEmbeddedData("apt_correct", String(summary.correct || 0));
+      Qualtrics.SurveyEngine.setEmbeddedData("apt_accuracy", summary.accuracy || "");
+      Qualtrics.SurveyEngine.setEmbeddedData("apt_trials_json", JSON.stringify(data.payload.trials || []));
+      Qualtrics.SurveyEngine.setEmbeddedData("apt_practice_trials_json", JSON.stringify(data.payload.practiceTrials || []));
       return;
     }
 
+    // Auto-advance when the task is done
     if (data.eventType === "continue") {
       restoreQualtricsChrome();
       window.removeEventListener("message", onTaskMessage);
-
       if (nextButton) {
-        nextButton.click();
+        q.clickNextButton();
       }
     }
   }
 
+  // START THE TASK
   hideQualtricsChrome();
   window.addEventListener("message", onTaskMessage);
 
+  // CLEANUP ON UNLOAD
   Qualtrics.SurveyEngine.addOnUnload(function () {
     window.removeEventListener("message", onTaskMessage);
     restoreQualtricsChrome();
