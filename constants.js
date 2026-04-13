@@ -6,6 +6,7 @@ window.TASK_DEFAULTS = Object.freeze({
   PRACTICE_PERIOD_SECONDS: 30,
   BLOCK_TYPE: "sequence",
   PERFORMANCE_TARGET_CORRECT: 5,
+  SHOW_TARGET_PANEL: true,
 
   ENABLE_PRACTICE_BLOCK: true,
   SHOW_PRACTICE_FEEDBACK: true,
@@ -48,6 +49,7 @@ window.TASK_DEFAULTS = Object.freeze({
     practiceSeconds: "PRACTICE_PERIOD_SECONDS",
     blockType: "BLOCK_TYPE",
     target: "PERFORMANCE_TARGET_CORRECT",
+    targetVisible: "SHOW_TARGET_PANEL",
     practice: "ENABLE_PRACTICE_BLOCK",
     practiceFeedback: "SHOW_PRACTICE_FEEDBACK",
     mainFeedback: "SHOW_MAIN_FEEDBACK",
