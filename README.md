@@ -1,189 +1,236 @@
 # Arithmetic Performance Task
 
-A polished, static arithmetic experiment for GitHub Pages and Qualtrics.
+A static arithmetic task for GitHub Pages and Qualtrics.
 
-The task presents repeated addition items made from sets of two-digit numbers. It includes:
+Participants solve repeated addition problems under time pressure. The task can optionally show a row of previous competitors' scores during the main block so the current participant knows the score to beat.
 
-- a timed work period
-- optional practice trials
-- optional immediate feedback
-- a configurable performance target
-- trial-by-trial logging
-- a final summary screen
-- `postMessage` integration for Qualtrics or any parent page
+## What This Task Does
 
-## File structure
+- Runs as a plain HTML/CSS/JavaScript page
+- Supports an optional practice block
+- Can show immediate correctness feedback
+- Tracks correct answers, trial logs, and summary metrics
+- Accepts participant/session metadata through URL parameters
+- Accepts a `previousScores` URL parameter to display prior competitors' scores
+- Accepts a `hebrewMode` URL parameter to run the full task in Hebrew
+- Sends trial-by-trial and completion data through `window.postMessage`
+- Works as a standalone page or inside a Qualtrics iframe
 
-```text
-arithmetic-task-gh-pages/
-├── index.html
-├── style.css
-├── script.js
-├── config/
-│   └── constants.js
-├── qualtrics-embed-example.md
-└── README.md
-```
+## Files
 
-## Quick start
+- `index.html`: page shell
+- `style.css`: styling
+- `script.js`: task logic
+- `constants.js`: default configuration
+- `qualtrics-embed-example.md`: example Qualtrics setup
 
-1. Upload the folder to a GitHub repository.
-2. Enable GitHub Pages for the repository.
-3. Open the published `index.html` URL.
-4. For Qualtrics, embed the GitHub Pages URL in an iframe and listen for `postMessage` events from the task.
+## Quick Start
 
-## Default behavior
+1. Put the files in a GitHub repository.
+2. Enable GitHub Pages for that repository.
+3. Open the published URL and confirm the task loads.
+4. Test a manual URL with `previousScores` before embedding it in Qualtrics.
+5. After the standalone version looks right, embed the same URL pattern in Qualtrics.
 
-By default, the task runs with:
+## Typical Study Flow
 
-- 180-second timed block
-- performance target of 25 correct responses
-- 5 practice trials
-- immediate correctness feedback turned on
-- 3 to 5 addends per item
-- two-digit numbers ranging from 10 to 99
+1. Participant completes the task.
+2. The tester records that participant's final score.
+3. Before the next participant starts, Qualtrics passes the list of previous scores into the task URL.
+4. The next participant sees those previous scores in the task and tries to beat the best one.
 
-## Main configuration
+The task does not ask the participant to type previous scores inside the task itself. Those scores should be passed in through the Qualtrics link.
 
-Edit `config/constants.js` to change the default task behavior.
+## Main Configuration
 
-```js
-window.TASK_DEFAULTS = Object.freeze({
-  WORK_PERIOD_SECONDS: 180,
-  PERFORMANCE_TARGET_CORRECT: 25,
-  ENABLE_PRACTICE_BLOCK: true,
-  PRACTICE_TRIAL_COUNT: 5,
-  SHOW_IMMEDIATE_FEEDBACK: true,
-  FEEDBACK_DURATION_MS: 700,
-  MIN_ADDENDS: 3,
-  MAX_ADDENDS: 5,
-  MIN_NUMBER: 10,
-  MAX_NUMBER: 99,
-  POST_MESSAGE_NAMESPACE: "arithmetic-task",
-  POST_MESSAGE_TARGET_ORIGIN: "*"
-});
-```
+Edit [constants.js](/C:/Users/alonh/Documents/Codex/2026-04-23-hey-go-to-my-github-repo/constants.js:1) to change default behavior.
 
-## URL parameter overrides
+Important defaults:
 
-The task also supports lightweight runtime overrides through URL parameters, which is handy for Qualtrics conditions.
+- `WORK_PERIOD_SECONDS`: duration of the main block
+- `PRACTICE_PERIOD_SECONDS`: duration of the practice block
+- `BLOCK_TYPE`: `main`, `practice`, or `sequence`
+- `PERFORMANCE_TARGET_CORRECT`: fallback target when no previous scores are provided
+- `SHOW_PREVIOUS_SCORES_BOARD`: whether to show the previous-scores strip
+- `ENABLE_PRACTICE_BLOCK`: whether the practice block is used in sequence mode
+- `SHOW_PRACTICE_FEEDBACK` / `SHOW_MAIN_FEEDBACK`: immediate feedback toggles
+- `MIN_ADDENDS`, `MAX_ADDENDS`: number of addends in each problem
+- `MIN_NUMBER`, `MAX_NUMBER`: numeric range for addends
 
-Example:
+## URL Parameters
 
-```text
-https://YOUR-USERNAME.github.io/YOUR-REPO/?participantId=R_12345&condition=feedbackOn&workSeconds=120&target=20&practice=1&practiceTrials=3&feedback=1
-```
+The task can be configured at runtime through URL parameters. This is the recommended way to use it with Qualtrics.
 
-Supported parameters:
+Common parameters:
 
 - `participantId`
 - `sessionId`
 - `condition`
 - `workSeconds`
+- `practiceSeconds`
+- `blockType`
 - `target`
-- `practice` (`1` or `0`)
-- `practiceTrials`
-- `feedback` (`1` or `0`)
+- `practice`
+- `practiceFeedback`
+- `mainFeedback`
 - `minAddends`
 - `maxAddends`
 - `minNumber`
 - `maxNumber`
-- `targetOrigin`
+- `showPreviousScoresBoard`
+- `previousScores`
+- `hebrewMode`
 
-## Trial logging
+Example standalone URL:
 
-Each completed trial is posted with `window.postMessage` to the parent page when embedded, or to the same window in standalone mode.
+```text
+https://YOUR-USERNAME.github.io/YOUR-REPO/?participantId=R_12345&sessionId=pilot01&condition=competition&blockType=sequence&previousScores=Competitor%201:12|Competitor%202:5|Competitor%203:9
+```
 
-### Trial event
+Hebrew example:
+
+```text
+https://YOUR-USERNAME.github.io/YOUR-REPO/?participantId=R_12345&sessionId=pilot01&condition=competition&blockType=sequence&hebrewMode=1&previousScores=Competitor%201:12|Competitor%202:5|Competitor%203:9
+```
+
+## How `previousScores` Works
+
+`previousScores` should contain the earlier competitors in the order you want them shown from left to right.
+
+Recommended simple format:
+
+```text
+Competitor 1:12|Competitor 2:5|Competitor 3:9
+```
+
+Also supported:
+
+```json
+[{"label":"Competitor 1","score":12},{"label":"Competitor 2","score":5}]
+```
+
+Behavior:
+
+- The row of previous scores is shown on the intro screen and the main task screen
+- Practice does not show the previous-scores strip
+- The goal bar uses the highest previous score as its reference point
+- The visual highlight is applied to the actual leading score, not simply the first entry
+- The task treats beating the highest previous score as success
+
+If no `previousScores` value is provided, the task falls back to `PERFORMANCE_TARGET_CORRECT`.
+
+## Hebrew Mode
+
+Set `hebrewMode=1` in the URL to switch the entire participant-facing task into Hebrew.
+
+What changes in Hebrew mode:
+
+- all interface labels and instructions
+- button text
+- intro, practice, main task, and summary screens
+- final tester instruction
+- page direction switches to right-to-left
+
+What does not change:
+
+- task timing
+- arithmetic items
+- scoring logic
+- data fields sent through `postMessage`
+- `previousScores` parsing and display order
+
+## Local Testing
+
+Open the file directly:
+
+```text
+file:///C:/.../index.html?previousScores=Competitor%201:12|Competitor%202:5
+```
+
+Or serve it locally:
+
+```powershell
+python -m http.server 8000
+```
+
+Then open:
+
+```text
+http://localhost:8000/index.html?previousScores=Competitor%201:12|Competitor%202:5|Competitor%203:9
+```
+
+## Data Sent Out Of The Task
+
+The task posts messages using `window.postMessage`.
+
+Events:
+
+- `ready`: task loaded
+- `started`: participant started the task
+- `trial`: one completed trial
+- `completed`: full summary and trial arrays
+- `continue`: participant pressed Continue on the final screen
+
+### Trial Payload Example
 
 ```js
 {
-  source: "arithmetic-task",
-  eventType: "trial",
-  type: "arithmetic-task:trial",
-  sentAtIso: "2026-04-11T09:15:33.000Z",
-  payload: {
-    taskName: "Arithmetic Performance Task",
-    taskVersion: "1.0.0",
-    participantId: "R_12345",
-    sessionId: "",
-    condition: "feedbackOn",
-    overallTrialIndex: 12,
-    phase: "main",
-    phaseTrialIndex: 7,
-    displayedAtIso: "2026-04-11T09:15:31.100Z",
-    submittedAtIso: "2026-04-11T09:15:33.000Z",
-    prompt: "24 + 58 + 39",
-    addends: [24, 58, 39],
-    setSize: 3,
-    correctAnswer: 121,
-    response: 121,
-    isCorrect: true,
-    timedOut: false,
-    rtMs: 1900,
-    remainingTimeMs: 74218,
-    targetCorrect: 25
-  }
+  taskName: "Addition Task",
+  taskVersion: "1.2.0",
+  participantId: "R_12345",
+  sessionId: "pilot01",
+  condition: "competition",
+  overallTrialIndex: 12,
+  phase: "main",
+  phaseTrialIndex: 7,
+  prompt: "24 + 58 + 39",
+  correctAnswer: 121,
+  response: 121,
+  isCorrect: true,
+  rtMs: 1900,
+  targetCorrect: 12,
+  scoreToBeat: 12,
+  previousScores: [
+    { label: "Competitor 1", score: 12 },
+    { label: "Competitor 2", score: 5 }
+  ]
 }
 ```
 
-### Completion event
-
-When the task ends, it posts a completion message with a summary plus the main-block and practice-block trial arrays.
+### Completion Payload Example
 
 ```js
 {
-  source: "arithmetic-task",
-  eventType: "completed",
-  type: "arithmetic-task:completed",
-  payload: {
-    summary: {
-      correct: 27,
-      attempted: 31,
-      accuracy: "87%",
-      meanRtMs: 1824,
-      bestStreak: 8,
-      targetMet: true
-    },
-    trials: [...],
-    practiceTrials: [...]
-  }
+  summary: {
+    correct: 27,
+    attempted: 31,
+    accuracy: "87%",
+    meanRtMs: 1824,
+    bestStreak: 8,
+    targetMet: true,
+    scoreToBeat: 12
+  },
+  trials: [...],
+  practiceTrials: [...]
 }
 ```
 
-## Qualtrics integration notes
+## Qualtrics Notes
 
-The example integration is in `qualtrics-embed-example.md`.
+- The task is meant to be embedded in an iframe.
+- Qualtrics should pass participant metadata and previous scores through the iframe URL.
+- Qualtrics should listen for `postMessage` events from the iframe.
+- The final task screen tells the participant to call the tester before pressing Continue.
+- When the participant eventually presses Continue, Qualtrics can advance to the next page.
 
-Recommended pattern:
+See [qualtrics-embed-example.md](/C:/Users/alonh/Documents/Codex/2026-04-23-hey-go-to-my-github-repo/qualtrics-embed-example.md:1) for a full example.
 
-- host the task on GitHub Pages
-- embed it with an iframe inside a Qualtrics question
-- hide the Qualtrics header, buttons, and progress UI while the task runs
-- listen for `postMessage` events from the iframe
-- write summary fields into embedded data
-- restore the Qualtrics UI when the task completes
+## Recommended Researcher Checklist
 
-## Important Qualtrics note
-
-Qualtrics embedded-data fields are not ideal for storing very large trial arrays. For moderate task lengths, storing JSON may be acceptable. For long tasks or larger datasets, keep the trial-level messages in JavaScript or send them to an external endpoint instead of relying on a single large embedded-data field.
-
-## Editing guide
-
-To make the task easier or harder:
-
-- reduce or increase `MIN_ADDENDS` and `MAX_ADDENDS`
-- narrow or widen `MIN_NUMBER` and `MAX_NUMBER`
-- shorten or lengthen `WORK_PERIOD_SECONDS`
-- raise or lower `PERFORMANCE_TARGET_CORRECT`
-- turn feedback on or off with `SHOW_IMMEDIATE_FEEDBACK`
-- disable practice with `ENABLE_PRACTICE_BLOCK`
-
-## Deployment checklist
-
-- confirm the GitHub Pages URL loads `index.html`
-- confirm `config/constants.js` loads before `script.js`
-- test one standalone run in the browser
-- test one embedded run inside Qualtrics preview
-- verify that trial and completion `postMessage` events are received
-- verify that the Qualtrics UI is restored after task completion
+- Confirm the GitHub Pages URL loads
+- Confirm `previousScores` appears in the expected left-to-right order
+- Confirm the highlighted chip matches the highest previous score
+- Confirm practice behavior matches your chosen `BLOCK_TYPE`
+- Confirm Qualtrics receives `trial` and `completed` events
+- Confirm the tester instruction appears on the final summary screen
+- Confirm the page only advances after the tester allows the participant to continue
