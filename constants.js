@@ -1,23 +1,23 @@
 window.TASK_DEFAULTS = Object.freeze({
   APP_NAME: "Addition Task",
-  TASK_VERSION: "1.1.1",
+  TASK_VERSION: "1.2.0",
 
   WORK_PERIOD_SECONDS: 30,
   PRACTICE_PERIOD_SECONDS: 30,
-  BLOCK_TYPE: "sequence",
+  BLOCK_TYPE: "main",
   PERFORMANCE_TARGET_CORRECT: 5,
-  SHOW_TARGET_PANEL: true,
+  SHOW_TARGET_PANEL: false,
+  HEBREW_MODE: true,
 
-  ALLOW_TARGET_INPUT: false,
-  DEFAULT_TARGET_VALUE: 5,
+  SHOW_PREVIOUS_SCORES_BOARD: true,
   
   ENABLE_PRACTICE_BLOCK: true,
   SHOW_PRACTICE_FEEDBACK: true,
   SHOW_MAIN_FEEDBACK: true,
   FEEDBACK_DURATION_MS: 700,
 
-  MIN_ADDENDS: 5,
-  MAX_ADDENDS: 5,
+  MIN_ADDENDS: 3,
+  MAX_ADDENDS: 3,
   MIN_NUMBER: 10,
   MAX_NUMBER: 99,
 
@@ -33,7 +33,7 @@ window.TASK_DEFAULTS = Object.freeze({
   PRACTICE_TEXT: "Use the practice block to get comfortable with the response format before the timed block begins.",
   SUMMARY_TEXT: "",
 
-  SHOW_PROGRESS_BAR: true,
+  SHOW_PROGRESS_BAR: false,
   SHOW_ACCURACY_PANEL: false,
   SHOW_TRIALS_PANEL: false,
   SHOW_TRIAL_NUMBER_LABEL: false,
@@ -70,7 +70,7 @@ window.TASK_DEFAULTS = Object.freeze({
     showSummaryCorrect: "SHOW_SUMMARY_CORRECT_CARD",
     showSummaryTarget: "SHOW_SUMMARY_TARGET_MET_CARD",
     targetOrigin: "POST_MESSAGE_TARGET_ORIGIN",
-    allowTargetInput: "ALLOW_TARGET_INPUT",
-    defaultTargetValue: "DEFAULT_TARGET_VALUE"
+    showPreviousScoresBoard: "SHOW_PREVIOUS_SCORES_BOARD",
+    hebrewMode: "HEBREW_MODE"
   })
 });
