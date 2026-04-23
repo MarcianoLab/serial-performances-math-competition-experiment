@@ -1,17 +1,67 @@
-# Example Qualtrics Embed Code
+# Qualtrics Embed Example
 
-This example assumes the task is hosted on GitHub Pages and embedded in a Qualtrics question using an iframe.
+This guide shows one practical way to run the arithmetic task inside Qualtrics.
 
-## 1) Question HTML
+Use this file if you need to hand the setup to another researcher or programmer.
+
+## Overview
+
+The task is hosted outside Qualtrics, usually on GitHub Pages. Qualtrics embeds it in an iframe and passes values through the URL.
+
+Qualtrics is responsible for:
+
+- passing participant metadata
+- passing the list of previous competitors' scores
+- receiving `postMessage` events from the task
+- saving summary fields into Embedded Data
+- deciding when to advance the survey
+
+The task is responsible for:
+
+- rendering the arithmetic task
+- showing previous scores
+- timing the block
+- computing summary values
+- posting trial and completion data back to Qualtrics
+
+## 1. Create the Embedded Data Fields in Qualtrics
+
+Before using the task, add these Embedded Data fields to your survey flow.
+
+Minimum recommended fields:
+
+- `SessionID`
+- `Condition`
+- `PreviousScoresBoard`
+- `apt_last_trial_json`
+- `apt_trial_count`
+- `apt_summary_json`
+- `apt_correct`
+- `apt_accuracy`
+- `apt_trials_json`
+- `apt_practice_trials_json`
+
+Notes:
+
+- `ResponseID` is built into Qualtrics already. You do not create it manually.
+- `PreviousScoresBoard` should hold the previous competitors in display order, for example:
+
+```text
+Competitor 1:12|Competitor 2:5|Competitor 3:9
+```
+
+## 2. Add the Question HTML
+
+Put this in the Qualtrics question HTML.
 
 ```html
-<div id="apt-container-wrapper" style="display: none; background: #f3f6fb; justify-content: center; align-items: center; width: 100%; height: auto;">
-  <div id="apt-wrapper" style="width: 100%; max-width: 900px; padding: 10px;">
+<div id="apt-container-wrapper" style="display:none; background:#f3f6fb; justify-content:center; align-items:center; width:100%; height:auto;">
+  <div id="apt-wrapper" style="width:100%; max-width:900px; padding:10px;">
     <iframe
       id="apt-frame"
       title="Arithmetic Performance Task"
-      src="https://marcianolab.github.io/serial-performances-math-competition-experiment/?participantId=${e://Field/ResponseID}&sessionId=${e://Field/SessionID}&condition=${e://Field/Condition}"
-      style="width: 100%; height: 600px; border: 0; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); background: #fff;"
+      src="https://marcianolab.github.io/serial-performances-math-competition-experiment/?participantId=${e://Field/ResponseID}&sessionId=${e://Field/SessionID}&condition=${e://Field/Condition}&previousScores=${e://Field/PreviousScoresBoard}"
+      style="width:100%; height:600px; border:0; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.08); background:#fff;"
       allow="fullscreen"
       referrerpolicy="strict-origin-when-cross-origin"
     ></iframe>
@@ -19,29 +69,55 @@ This example assumes the task is hosted on GitHub Pages and embedded in a Qualtr
 </div>
 ```
 
-## 2) Question JavaScript
+### What This URL Does
+
+- `participantId=${e://Field/ResponseID}` passes the Qualtrics response ID into the task
+- `sessionId=${e://Field/SessionID}` passes your session or wave label
+- `condition=${e://Field/Condition}` passes your study condition label
+- `previousScores=${e://Field/PreviousScoresBoard}` passes the visible row of previous competitors' scores
+
+If you want the task to run in Hebrew, add:
+
+```text
+&hebrewMode=1
+```
+
+Full Hebrew example:
+
+```text
+https://marcianolab.github.io/serial-performances-math-competition-experiment/?participantId=${e://Field/ResponseID}&sessionId=${e://Field/SessionID}&condition=${e://Field/Condition}&hebrewMode=1&previousScores=${e://Field/PreviousScoresBoard}
+```
+
+If you want to test with hard-coded values first, replace the last part with something like:
+
+```text
+&previousScores=Competitor%201:12|Competitor%202:5|Competitor%203:9
+```
+
+## 3. Add the Question JavaScript
+
+Put this in the Qualtrics question JavaScript.
 
 ```javascript
 Qualtrics.SurveyEngine.addOnload(function () {
-  // 1. SAFETY GUARD: Detect if we are in the Qualtrics Editor/Builder
-  var isEditor = document.body.classList.contains('ControlPanel') || 
-                 document.body.classList.contains('Builder') || 
-                 window.location.href.indexOf('ControlPanel') !== -1;
-
-  if (isEditor) {
-    console.log("Editor mode detected: Task suppressed to allow editing.");
-    var editorContainer = document.getElementById("apt-container-wrapper");
-    if (editorContainer) {
-      editorContainer.style.display = "block"; // Show as a normal box in editor
-      editorContainer.style.position = "relative";
-    }
-    return; // Stop execution for the researcher
-  }
-
-  // 2. INITIALIZATION FOR PARTICIPANTS
   var q = this;
   var nextButton = document.getElementById("NextButton");
   var trialLogs = [];
+
+  // Prevent the task from taking over the page while editing in the Qualtrics builder.
+  var isEditor =
+    document.body.classList.contains("ControlPanel") ||
+    document.body.classList.contains("Builder") ||
+    window.location.href.indexOf("ControlPanel") !== -1;
+
+  if (isEditor) {
+    var editorContainer = document.getElementById("apt-container-wrapper");
+    if (editorContainer) {
+      editorContainer.style.display = "block";
+      editorContainer.style.position = "relative";
+    }
+    return;
+  }
 
   function setDisplay(selector, value) {
     var nodes = document.querySelectorAll(selector);
@@ -51,20 +127,17 @@ Qualtrics.SurveyEngine.addOnload(function () {
   }
 
   function hideQualtricsChrome() {
-    // Hide standard Qualtrics UI
     setDisplay("#Header", "none");
     setDisplay("#Buttons", "none");
     setDisplay("#ProgressBar", "none");
     setDisplay(".Separator", "none");
-    
-    // LOCK SCROLLING: Prevents the "toggling"/scrolling behavior
+
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
 
-    // FULLSCREEN PROMOTION: Fix the task to the top of the viewport
     var container = document.getElementById("apt-container-wrapper");
     if (container) {
-      container.style.display = "flex"; 
+      container.style.display = "flex";
       container.style.position = "fixed";
       container.style.top = "0";
       container.style.left = "0";
@@ -72,10 +145,10 @@ Qualtrics.SurveyEngine.addOnload(function () {
       container.style.height = "100vh";
       container.style.zIndex = "9999";
     }
-    
+
     var iframe = document.getElementById("apt-frame");
     if (iframe) {
-      iframe.style.height = "96vh"; // Let the iframe fill the fixed container
+      iframe.style.height = "96vh";
     }
 
     if (nextButton) {
@@ -84,7 +157,6 @@ Qualtrics.SurveyEngine.addOnload(function () {
   }
 
   function restoreQualtricsChrome() {
-    // UNLOCK SCROLLING
     document.body.style.overflow = "";
     document.documentElement.style.overflow = "";
 
@@ -107,7 +179,6 @@ Qualtrics.SurveyEngine.addOnload(function () {
     var data = event.data;
     if (!data || data.source !== "arithmetic-task") return;
 
-    // Handle individual trial logs
     if (data.eventType === "trial") {
       trialLogs.push(data.payload);
       Qualtrics.SurveyEngine.setEmbeddedData("apt_last_trial_json", JSON.stringify(data.payload));
@@ -116,7 +187,6 @@ Qualtrics.SurveyEngine.addOnload(function () {
       return;
     }
 
-    // Handle completion summary
     if (data.eventType === "completed") {
       var summary = data.payload.summary || {};
       Qualtrics.SurveyEngine.setEmbeddedData("apt_summary_json", JSON.stringify(summary));
@@ -127,7 +197,6 @@ Qualtrics.SurveyEngine.addOnload(function () {
       return;
     }
 
-    // Auto-advance when the task is done
     if (data.eventType === "continue") {
       restoreQualtricsChrome();
       window.removeEventListener("message", onTaskMessage);
@@ -137,11 +206,9 @@ Qualtrics.SurveyEngine.addOnload(function () {
     }
   }
 
-  // START THE TASK
   hideQualtricsChrome();
   window.addEventListener("message", onTaskMessage);
 
-  // CLEANUP ON UNLOAD
   Qualtrics.SurveyEngine.addOnUnload(function () {
     window.removeEventListener("message", onTaskMessage);
     restoreQualtricsChrome();
@@ -149,82 +216,97 @@ Qualtrics.SurveyEngine.addOnload(function () {
 });
 ```
 
-## 3) Embedded Data Variables (add to qualtrics)
+## 4. How to Populate `PreviousScoresBoard`
 
-```
-| Variable                   | What it stores                        |
-| -------------------------- | ------------------------------------- |
-| `SessionID`                | Your session or wave label            |
-| `Condition`                | Your experimental condition           |
-| `apt_last_trial_json`      | Full data for the most recent trial   |
-| `apt_trial_count`          | Number of completed trials so far     |
-| `apt_last_prompt`          | Most recent arithmetic item shown     |
-| `apt_last_accuracy`        | Whether most recent trial was correct |
-| `apt_summary_json`         | Full final summary object             |
-| `apt_correct`              | Total correct in main block           |
-| `apt_attempted`            | Total attempted in main block         |
-| `apt_accuracy`             | Accuracy in main block                |
-| `apt_mean_rt_ms`           | Mean RT in milliseconds               |
-| `apt_target_met`           | Whether target was met                |
-| `apt_trials_json`          | All main-block trials                 |
-| `apt_practice_trials_json` | All practice trials                   |
-| `p_prompt_X`	             | The question for practice trial X     |
-| `p_correct_X	             | The correct answer for trial X        |
-| `p_respond_X	             | The participant's respond for trial X |
-| `p_rt_X	                   | The response time for  trial X        |
-| `m_prompt_X	               | The question for main trial X         |
-| `m_correct_X	             | The correct answer for main trial X   |
-| `m_respond_X	             | The participant's respond for trial X |
-| `m_rt_X	                   |The response time for main trial X     |
+This field should be prepared before the participant reaches the task question.
 
+Recommended format:
 
-
-
-SessionID
-A session or batch identifier you define. Useful if you want to mark participants as belonging to a specific wave, run, lab session, or dataset.
-
-Condition
-An experimental condition label you define, such as A, B, feedback_on, feedback_off, target_high, and so on.
-
-ResponseID
-You do not need to create this one manually. It is built into Qualtrics already. It uniquely identifies the participant’s survey response and is often passed into the task as participantId.
-
-apt_last_trial_json
-A JSON string containing the full data from the most recent trial. Useful for debugging or checking exactly what happened on the latest item.
-
-apt_trial_count
-The number of trials completed so far. In your current Qualtrics script, this grows with each received "trial" message.
-
-apt_last_prompt
-The arithmetic prompt from the most recent trial, for example something like 24 + 51 + 38.
-
-apt_last_accuracy
-Whether the most recent response was correct. In your current setup this is stored as:
-1 = correct
-0 = incorrect
-
-apt_summary_json
-A JSON string containing the final summary object for the main timed block. This is the most complete summary field.
-
-apt_correct
-Number of correct responses in the main timed block.
-
-apt_attempted
-Number of non-timeout trials attempted in the main timed block.
-
-apt_accuracy
-Accuracy in the main timed block, usually as a formatted percentage string such as 83%.
-
-apt_mean_rt_ms
-Mean response time for attempted main-block trials, in milliseconds.
-
-apt_target_met
-Whether the participant met the performance target.
-In your current setup:
-1 = yes
-0 = no
-
-
-
+```text
+Competitor 1:12|Competitor 2:5|Competitor 3:9|Competitor 4:14
 ```
 
+Rules:
+
+- Keep the competitors in the exact order you want shown left to right
+- Use `|` between competitors
+- Use `:` between label and score
+- Scores should be whole numbers
+
+Examples:
+
+```text
+Competitor 1:12
+```
+
+```text
+Competitor 1:12|Competitor 2:5
+```
+
+```text
+Competitor 1:12|Competitor 2:5|Competitor 3:9|Competitor 4:14|Competitor 5:11
+```
+
+## 5. What Participants Will See
+
+Intro screen:
+
+- task title
+- optional task settings such as time
+- a horizontal `Previous Scores` row if `previousScores` was provided
+
+Main task screen:
+
+- `Correct` counter
+- `Previous Scores` row
+- goal bar
+- arithmetic items and response input
+
+Final summary screen:
+
+- final summary values
+- a red instruction telling the participant to call the tester before pressing Continue
+
+## 6. What Data You Get Back
+
+The task sends `postMessage` events with:
+
+- trial-level data on every completed trial
+- summary data when the task ends
+
+Useful summary fields:
+
+- `correct`
+- `attempted`
+- `accuracy`
+- `meanRtMs`
+- `bestStreak`
+- `targetMet`
+- `scoreToBeat`
+- `previousScores`
+
+## 7. Recommended Testing Steps
+
+1. Test the task outside Qualtrics with a hard-coded URL.
+2. Test the iframe inside Qualtrics preview with a hard-coded `previousScores` value.
+3. Confirm the `Previous Scores` row appears in the expected order.
+4. Confirm the highlighted chip matches the highest score.
+5. Confirm the summary fields are written into Embedded Data.
+6. Confirm the final tester instruction appears.
+7. Confirm the page only advances after the participant presses Continue.
+
+## 8. Common Mistakes
+
+- Forgetting to URL-encode spaces in manual test links
+- Passing scores in the wrong order, then expecting the task to rearrange them
+- Expecting practice to show the previous-scores row
+- Forgetting to add `PreviousScoresBoard` to the Qualtrics survey flow
+- Trying to store extremely large trial arrays in a single Qualtrics field
+
+## 9. Manual Test URL
+
+Example:
+
+```text
+https://marcianolab.github.io/serial-performances-math-competition-experiment/?participantId=test01&sessionId=pilot01&condition=competition&blockType=sequence&previousScores=Competitor%201:12|Competitor%202:5|Competitor%203:9
+```
