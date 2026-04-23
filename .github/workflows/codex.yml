@@ -1,0 +1,15 @@
+name: Codex
+
+on:
+  workflow_dispatch:
+
+jobs:
+  codex:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: OpenAI Codex Code Generator
+        uses: lemonberrylabs/openai-codex-action@v0.3.0
