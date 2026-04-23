@@ -33,6 +33,117 @@
     taskFinished: false
   };
 
+  const COPY = {
+    en: {
+      appName: "Addition Task",
+      appLoading: "Loading the task...",
+      time: "Time",
+      itemFormat: "Item format",
+      immediateFeedback: "Immediate feedback",
+      feedbackOn: "On",
+      feedbackOff: "Off",
+      previousScores: "Previous Scores",
+      bestSoFar: "Best so far",
+      performanceTarget: "Performance target",
+      instructionsTitle: "Instructions.",
+      instructionsBody:
+        "Solve each addition problem as quickly and accurately as possible. Submit one whole-number answer per item.",
+      beginPractice: "Begin Practice",
+      startPractice: "Start Practice",
+      start: "Start",
+      practice: "Practice",
+      practiceComplete: "Practice complete",
+      pressBelowMain: "Press below to begin the main block.",
+      practiceCorrect: "Practice correct",
+      practiceAccuracy: "Practice accuracy",
+      correct: "Correct Answers",
+      trials: "Trials",
+      accuracy: "Accuracy",
+      goal: "Goal",
+      target: "Target",
+      enterSum: "Enter the sum",
+      enterSumPlaceholder: "Enter sum",
+      submit: "Submit",
+      correctFeedback: "correct",
+      incorrectFeedback: "incorrect",
+      pleaseEnterResponse: "Please enter a response before submitting.",
+      wholeNumbersOnly: "Responses must be whole numbers.",
+      finalSummary: "Final summary",
+      passedBest: "Passed best",
+      targetMet: "Target met",
+      yes: "Yes",
+      no: "No",
+      continue: "Continue",
+      continueApprovalPrompt: "Has the tester given you permission to continue?",
+      callTesterTitle: "Please call the tester now.",
+      callTesterEmphasis: "DO NOT PRESS CONTINUE",
+      callTesterSuffix: "until the tester arrives, announces your score, and tells you to proceed.",
+      defaultPracticeText:
+        "Use the practice block to get comfortable with the response format before the timed block begins.",
+      practiceLabel: (n) => `Practice ${n}`,
+      trialLabel: (n) => `Trial ${n}`,
+      competitor: (n) => `Competitor ${n}`,
+      formatTwoDigitRange: (min, max) => `${min}-${max} two-digit numbers`,
+      secondsShort: "s",
+      minutesShort: "min"
+    },
+    he: {
+      appName: "משימת חיבור",
+      callTesterEmphasis: 'אין ללחוץ על "המשך"',
+      callTesterSuffix: "עד שהנסיין יגיע, יכריז על הציון שלכם ויאשר לכם להמשיך.",
+      defaultPracticeText:
+        "השתמשו בבלוק התרגול כדי להכיר את אופן המענה לפני שהבלוק המתוזמן מתחיל.",
+      callTesterSuffix: "עד שהנסיין יגיע, יכריז על הציון שלכם ויאשר לכם להמשיך.",
+      secondsShort: "שניות",
+      minutesShort: "דק'",
+      appLoading: "טוען את המשימה...",
+      time: "זמן",
+      itemFormat: "מבנה התרגילים",
+      immediateFeedback: "משוב מיידי",
+      feedbackOn: "פועל",
+      feedbackOff: "כבוי",
+      previousScores: "תוצאות קודמות",
+      bestSoFar: "השיא עד כה",
+      performanceTarget: "יעד ביצוע",
+      instructionsTitle: "הוראות.",
+      instructionsBody:
+        "פתרו כל תרגיל חיבור במהירות ובדיוק המרביים. יש להזין תשובה של מספר שלם אחד לכל תרגיל.",
+      beginPractice: "התחל תרגול",
+      startPractice: "התחל תרגול",
+      start: "התחל",
+      practice: "תרגול",
+      practiceComplete: "התרגול הושלם",
+      pressBelowMain: "לחצו למטה כדי להתחיל את החלק המרכזי.",
+      practiceCorrect: "נכון בתרגול",
+      practiceAccuracy: "דיוק בתרגול",
+      correct: "תשובות נכונות",
+      trials: "ניסיונות",
+      accuracy: "דיוק",
+      goal: "יעד",
+      target: "יעד",
+      enterSum: "הזן/י סכום",
+      enterSumPlaceholder: "הזן/י סכום",
+      submit: "הזן",
+      correctFeedback: "נכון",
+      incorrectFeedback: "לא נכון",
+      pleaseEnterResponse: "יש להזין תשובה לפני השליחה.",
+      wholeNumbersOnly: "יש להזין מספרים שלמים בלבד.",
+      finalSummary: "סיכום סופי",
+      passedBest: "עבר את השיא",
+      targetMet: "היעד הושג",
+      yes: "כן",
+      no: "לא",
+      continue: "המשך",
+      callTesterTitle: "אנא קראו כעת לנסיין.",
+      callTesterBody:
+        "אין ללחוץ על המשך עד שהנסיין יגיע, יכריז על הציון שלכם ויאשר לכם להמשיך.",
+      practiceLabel: (n) => `תרגול ${n}`,
+      trialLabel: (n) => `ניסיון ${n}`,
+      competitor: (n) => `מתחרה ${n}`,
+      formatTwoDigitRange: (min, max) => `${min}-${max} מספרים דו-ספרתיים`
+    }
+  };
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initialize);
   } else {
@@ -40,19 +151,28 @@
   }
 
   function initialize() {
+    applyDocumentLanguage();
     app.setAttribute("aria-busy", "false");
-    
-      console.log("CONFIG DEBUG", {
-      blockType: config.BLOCK_TYPE,
-      practiceFeedback: config.SHOW_PRACTICE_FEEDBACK,
-      mainFeedback: config.SHOW_MAIN_FEEDBACK
-    });
-    
     renderIntro();
     postTaskMessage("ready", {
       config: getPublicConfig(),
       participant: getParticipantMeta()
     });
+  }
+
+  function applyDocumentLanguage() {
+    const lang = isHebrewMode() ? "he" : "en";
+    const dir = isHebrewMode() ? "rtl" : "ltr";
+
+    document.documentElement.lang = lang;
+    document.documentElement.dir = dir;
+    document.body.dir = dir;
+    document.body.classList.toggle("is-rtl", isHebrewMode());
+
+    const loadingText = document.querySelector(".loading-state p");
+    if (loadingText) {
+      loadingText.textContent = t("appLoading");
+    }
   }
 
   function buildRuntimeConfig(baseConfig) {
@@ -96,6 +216,9 @@
     runtimeConfig.PARTICIPANT_ID = params.get("participantId") || "";
     runtimeConfig.SESSION_ID = params.get("sessionId") || "";
     runtimeConfig.CONDITION = params.get("condition") || "";
+    runtimeConfig.PREVIOUS_SCORES = Object.freeze(
+      parsePreviousScores(params.get("previousScores"), runtimeConfig.HEBREW_MODE)
+    );
 
     return Object.freeze(runtimeConfig);
   }
@@ -109,17 +232,15 @@
       config.BLOCK_TYPE === "practice" ? config.PRACTICE_PERIOD_SECONDS : config.WORK_PERIOD_SECONDS;
 
     if (config.SHOW_INTRO_TIMED_WORK_PERIOD) {
-      introCards.push(createInfoCard("Time", formatSeconds(selectedBlockSeconds)));
+      introCards.push(createInfoCard(t("time"), formatSeconds(selectedBlockSeconds)));
     }
 
-    if (config.SHOW_INTRO_PERFORMANCE_TARGET && config.BLOCK_TYPE !== "practice") {
-      introCards.push(createInfoCard("Performance target", `${config.PERFORMANCE_TARGET_CORRECT} correct`));
+    if (config.SHOW_INTRO_PERFORMANCE_TARGET && config.BLOCK_TYPE !== "practice" && !config.PREVIOUS_SCORES.length) {
+      introCards.push(createInfoCard(getTargetLabelText(), `${getEffectiveTargetCorrect()} ${t("correct").toLowerCase()}`));
     }
 
     if (config.SHOW_INTRO_ITEM_FORMAT) {
-      introCards.push(
-        createInfoCard("Item format", `${config.MIN_ADDENDS}-${config.MAX_ADDENDS} two-digit numbers`)
-      );
+      introCards.push(createInfoCard(t("itemFormat"), t("formatTwoDigitRange", config.MIN_ADDENDS, config.MAX_ADDENDS)));
     }
 
     if (config.SHOW_INTRO_IMMEDIATE_FEEDBACK) {
@@ -129,37 +250,42 @@
           : config.BLOCK_TYPE === "main"
           ? config.SHOW_MAIN_FEEDBACK
           : config.SHOW_PRACTICE_FEEDBACK || config.SHOW_MAIN_FEEDBACK;
-    
-      introCards.push(createInfoCard("Immediate feedback", feedbackOn ? "On" : "Off"));
+
+      introCards.push(createInfoCard(t("immediateFeedback"), feedbackOn ? t("feedbackOn") : t("feedbackOff")));
     }
 
     app.innerHTML = `
-      <h1 class="panel-title">${escapeHtml(config.APP_NAME)}</h1>
-      ${config.INTRO_TEXT ? `<p class="panel-copy">${escapeHtml(config.INTRO_TEXT)}</p>` : ""}
+      <h1 class="panel-title">${escapeHtml(getAppNameText())}</h1>
+      ${getIntroText() ? `<p class="panel-copy">${escapeHtml(getIntroText())}</p>` : ""}
 
       ${introCards.length ? `<div class="info-grid">${introCards.join("")}</div>` : ""}
 
       ${
+        config.PREVIOUS_SCORES.length && config.BLOCK_TYPE !== "practice"
+          ? renderPreviousScoresBoard({ inIntro: true })
+          : ""
+      }
+
+      ${
         config.SHOW_INTRO_INSTRUCTIONS
-          ? `<div class="callout"><strong>Instructions.</strong> Solve each addition problem as quickly and accurately as possible. Submit one whole-number answer per item.</div>`
+          ? `<div class="callout"><strong>${escapeHtml(t("instructionsTitle"))}</strong> ${escapeHtml(t("instructionsBody"))}</div>`
           : ""
       }
 
       ${
         config.BLOCK_TYPE === "sequence" && config.ENABLE_PRACTICE_BLOCK
-          ? `<div class="callout subtle-callout">${escapeHtml(config.PRACTICE_TEXT)} Practice items are not counted toward the final target.</div>`
+          ? `<div class="callout subtle-callout">${escapeHtml(getPracticeText())}</div>`
           : ""
       }
 
       <div class="actions-row">
         <button class="btn btn-primary" id="start-task-btn" type="button">
-          ${config.BLOCK_TYPE === "practice" ? "Start Practice" : config.BLOCK_TYPE === "main" ? "Start" : "Begin Practice"}
+          ${getStartButtonLabel()}
         </button>
       </div>
     `;
 
-    const startButton = document.getElementById("start-task-btn");
-    startButton.addEventListener("click", () => {
+    document.getElementById("start-task-btn").addEventListener("click", () => {
       if (!state.taskStartedAtIso) {
         state.taskStartedAtIso = nowIso();
       }
@@ -174,12 +300,10 @@
         startPracticeBlock();
       } else if (config.BLOCK_TYPE === "main") {
         startMainBlock();
+      } else if (config.ENABLE_PRACTICE_BLOCK) {
+        startPracticeBlock();
       } else {
-        if (config.ENABLE_PRACTICE_BLOCK) {
-          startPracticeBlock();
-        } else {
-          startMainBlock();
-        }
+        startMainBlock();
       }
     });
   }
@@ -199,7 +323,7 @@
     state.mainDeadlinePerf = performance.now() + config.PRACTICE_PERIOD_SECONDS * 1000;
 
     renderTaskScaffold({
-      title: "Practice",
+      title: t("practice"),
       subtitle: "",
       timerText: formatCountdown(config.PRACTICE_PERIOD_SECONDS),
       statusClass: "is-neutral"
@@ -233,6 +357,7 @@
     const showAccuracyPanel = Boolean(config.SHOW_ACCURACY_PANEL);
     const showTrialNumberLabel = Boolean(config.SHOW_TRIAL_NUMBER_LABEL);
     const showTargetPanel = Boolean(config.SHOW_PROGRESS_BAR && config.SHOW_TARGET_PANEL);
+    const showPreviousScoresBoard = shouldShowPreviousScoresBoard();
 
     app.innerHTML = `
       <div class="task-header">
@@ -243,67 +368,75 @@
         <div class="status-pill ${statusClass}" id="timer-pill">${timerText}</div>
       </div>
 
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Correct</div>
-          <div class="stat-value" id="correct-count">0</div>
-        </div>
-        ${
-          showTrialsPanel
-            ? `<div class="stat-card"><div class="stat-label">Trials</div><div class="stat-value" id="trial-count">0</div></div>`
-            : ""
-        }
-        ${
-          showAccuracyPanel
-            ? `<div class="stat-card"><div class="stat-label">Accuracy</div><div class="stat-value" id="accuracy-value">—</div></div>`
-            : ""
-        }
-      </div>
-
-      ${
-        showTargetPanel
-          ? `
-            <div class="target-panel">
-              <div class="target-row">
-                <span>Target progress</span>
-                <span id="target-label">0 / ${config.PERFORMANCE_TARGET_CORRECT}</span>
-              </div>
-              <div class="target-track" aria-hidden="true">
-                <div class="target-fill" id="target-fill"></div>
-              </div>
+      <div class="task-main">
+        <div class="task-overview ${showPreviousScoresBoard ? "has-board" : ""}">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">${escapeHtml(t("correct"))}</div>
+              <div class="stat-value" id="correct-count">0</div>
             </div>
-          `
-          : ""
-      }
+            ${
+              showTrialsPanel
+                ? `<div class="stat-card"><div class="stat-label">${escapeHtml(t("trials"))}</div><div class="stat-value" id="trial-count">0</div></div>`
+                : ""
+            }
+            ${
+              showAccuracyPanel
+                ? `<div class="stat-card"><div class="stat-label">${escapeHtml(t("accuracy"))}</div><div class="stat-value" id="accuracy-value">-</div></div>`
+                : ""
+            }
+          </div>
 
-      <section class="trial-panel">
+          ${showPreviousScoresBoard ? renderPreviousScoresBoard() : ""}
+        </div>
+
         ${
-          showTrialNumberLabel
-            ? `<div class="trial-meta"><span id="trial-number-label">1</span></div>`
+          showTargetPanel
+            ? `
+              <div class="target-panel">
+                <div class="target-row">
+                  <span>${escapeHtml(getTargetProgressLabel())}</span>
+                  <span id="target-label">0 / ${getEffectiveTargetCorrect()}</span>
+                </div>
+                <div class="target-track" aria-hidden="true">
+                  <div class="target-fill" id="target-fill"></div>
+                </div>
+              </div>
+            `
             : ""
         }
 
-        <div class="equation" id="equation-display">&nbsp;</div>
+        <section class="trial-panel">
+          ${
+            showTrialNumberLabel
+              ? `<div class="trial-meta"><span id="trial-number-label">1</span></div>`
+              : ""
+          }
 
-        <form id="answer-form" class="answer-form" novalidate>
-          <label class="visually-hidden" for="answer-input">Enter the sum</label>
-          <input
-            id="answer-input"
-            name="answer"
-            class="answer-input"
-            type="number"
-            inputmode="numeric"
-            autocomplete="off"
-            spellcheck="false"
-            maxlength="${config.INPUT_MAX_LENGTH}"
-            placeholder="Enter sum"
-            required
-          />
-          <button class="btn btn-primary" id="submit-btn" type="submit">Submit</button>
-        </form>
+          <div class="equation" id="equation-display" dir="ltr">&nbsp;</div>
 
-        <div class="feedback" id="feedback" aria-live="assertive"></div>
-      </section>
+          <form id="answer-form" class="answer-form" novalidate>
+            <label class="visually-hidden" for="answer-input">${escapeHtml(t("enterSum"))}</label>
+            <input
+              id="answer-input"
+              name="answer"
+              class="answer-input"
+              type="number"
+              inputmode="numeric"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="${config.INPUT_MAX_LENGTH}"
+              placeholder="${escapeHtml(t("enterSumPlaceholder"))}"
+              required
+            />
+            <button class="btn btn-primary icon-btn" id="submit-btn" type="submit" aria-label="${escapeHtml(t("enterSum"))}">
+              <span aria-hidden="true">➜</span>
+            </button>
+          </form>
+
+          <div class="feedback" id="feedback" aria-live="assertive"></div>
+        </section>
+      </div>
     `;
 
     const answerForm = document.getElementById("answer-form");
@@ -348,8 +481,8 @@
     if (trialNumberLabel) {
       trialNumberLabel.textContent =
         phase === "practice"
-          ? `Practice ${state.practiceTrialCounter + 1}`
-          : `Trial ${state.mainTrialCounter + 1}`;
+          ? t("practiceLabel", state.practiceTrialCounter + 1)
+          : t("trialLabel", state.mainTrialCounter + 1);
     }
 
     if (config.AUTO_FOCUS_INPUT) {
@@ -373,10 +506,10 @@
   }
 
   function shouldShowFeedbackForPhase(phase) {
-  return phase === "practice" ? config.SHOW_PRACTICE_FEEDBACK : config.SHOW_MAIN_FEEDBACK;
-}
+    return phase === "practice" ? config.SHOW_PRACTICE_FEEDBACK : config.SHOW_MAIN_FEEDBACK;
+  }
 
- function handleAnswerSubmit(event) {
+  function handleAnswerSubmit(event) {
     event.preventDefault();
 
     if (!state.currentTrial || state.taskFinished) {
@@ -388,7 +521,7 @@
     const rawValue = answerInput.value.trim();
 
     if (rawValue === "") {
-      answerInput.setCustomValidity("Please enter a response before submitting.");
+      answerInput.setCustomValidity(t("pleaseEnterResponse"));
       answerInput.reportValidity();
       return;
     }
@@ -396,7 +529,7 @@
     const responseValue = Number.parseInt(rawValue, 10);
 
     if (!Number.isInteger(responseValue)) {
-      answerInput.setCustomValidity("Responses must be whole numbers.");
+      answerInput.setCustomValidity(t("wholeNumbersOnly"));
       answerInput.reportValidity();
       return;
     }
@@ -424,7 +557,7 @@
     };
 
     if (shouldShowFeedbackForPhase(trialRecord.phase)) {
-      feedback.textContent = trialRecord.isCorrect ? "correct" : "incorrect";
+      feedback.textContent = trialRecord.isCorrect ? t("correctFeedback") : t("incorrectFeedback");
       feedback.className = `feedback ${trialRecord.isCorrect ? "is-correct" : "is-incorrect"}`;
       state.feedbackTimerId = window.setTimeout(advance, config.FEEDBACK_DURATION_MS);
     } else {
@@ -458,14 +591,12 @@
       if (isCorrect) {
         state.practiceCorrect += 1;
       }
+    } else if (isCorrect) {
+      state.mainCorrect += 1;
+      state.consecutiveCorrect += 1;
+      state.bestStreak = Math.max(state.bestStreak, state.consecutiveCorrect);
     } else {
-      if (isCorrect) {
-        state.mainCorrect += 1;
-        state.consecutiveCorrect += 1;
-        state.bestStreak = Math.max(state.bestStreak, state.consecutiveCorrect);
-      } else {
-        state.consecutiveCorrect = 0;
-      }
+      state.consecutiveCorrect = 0;
     }
 
     const trialRecord = {
@@ -487,8 +618,10 @@
       isCorrect,
       timedOut,
       rtMs,
-      remainingTimeMs: (current.phase === "main" || current.phase === "practice") ? getRemainingTimeMs() : null,
-      targetCorrect: current.phase === "main" ? config.PERFORMANCE_TARGET_CORRECT : null
+      remainingTimeMs: current.phase === "main" || current.phase === "practice" ? getRemainingTimeMs() : null,
+      targetCorrect: current.phase === "main" ? getEffectiveTargetCorrect() : null,
+      scoreToBeat: current.phase === "main" ? getEffectiveTargetCorrect() : null,
+      previousScores: current.phase === "main" ? config.PREVIOUS_SCORES : []
     };
 
     if (current.phase === "practice") {
@@ -514,22 +647,22 @@
       const accuracy = getAccuracy(state.practiceTrials);
 
       app.innerHTML = `
-        <h1 class="panel-title">Practice complete</h1>
-        <p class="panel-copy">Press below to begin the main block.</p>
+        <h1 class="panel-title">${escapeHtml(t("practiceComplete"))}</h1>
+        <p class="panel-copy">${escapeHtml(t("pressBelowMain"))}</p>
 
         <div class="summary-grid narrow-grid">
           <div class="summary-card">
-            <div class="summary-label">Practice correct</div>
+            <div class="summary-label">${escapeHtml(t("practiceCorrect"))}</div>
             <div class="summary-value">${state.practiceCorrect}</div>
           </div>
           <div class="summary-card">
-            <div class="summary-label">Practice accuracy</div>
+            <div class="summary-label">${escapeHtml(t("practiceAccuracy"))}</div>
             <div class="summary-value">${accuracy}</div>
           </div>
         </div>
 
         <div class="actions-row">
-          <button class="btn btn-primary" id="start-main-btn" type="button">Start</button>
+          <button class="btn btn-primary" id="start-main-btn" type="button">${escapeHtml(t("start"))}</button>
         </div>
       `;
 
@@ -592,7 +725,7 @@
     if (config.SHOW_SUMMARY_CORRECT_CARD) {
       summaryCards.push(`
         <div class="summary-card">
-          <div class="summary-label">Correct</div>
+          <div class="summary-label">${escapeHtml(t("correct"))}</div>
           <div class="summary-value">${summary.correct}</div>
         </div>
       `);
@@ -601,24 +734,31 @@
     if (config.SHOW_SUMMARY_TARGET_MET_CARD && summary.targetMet !== null) {
       summaryCards.push(`
         <div class="summary-card ${summary.targetMet ? "is-success" : "is-neutral"}">
-          <div class="summary-label">Target met</div>
-          <div class="summary-value">${summary.targetMet ? "Yes" : "No"}</div>
+          <div class="summary-label">${escapeHtml(config.PREVIOUS_SCORES.length ? t("passedBest") : t("targetMet"))}</div>
+          <div class="summary-value">${summary.targetMet ? escapeHtml(t("yes")) : escapeHtml(t("no"))}</div>
         </div>
       `);
     }
 
     app.innerHTML = `
-      <h1 class="panel-title">Final summary</h1>
-      ${config.SUMMARY_TEXT ? `<p class="panel-copy">${escapeHtml(config.SUMMARY_TEXT)}</p>` : ""}
+      <h1 class="panel-title">${escapeHtml(t("finalSummary"))}</h1>
+      ${getSummaryText() ? `<p class="panel-copy">${escapeHtml(getSummaryText())}</p>` : ""}
 
       ${summaryCards.length ? `<div class="summary-grid narrow-grid">${summaryCards.join("")}</div>` : ""}
 
+      <div class="callout alert-callout">
+        <strong class="alert-callout-title">${escapeHtml(t("callTesterTitle"))}</strong>
+        <div class="alert-callout-line">
+          <strong>${escapeHtml(t("callTesterEmphasis"))}</strong>${escapeHtml(` ${t("callTesterSuffix")}`)}
+        </div>
+      </div>
+
       <div class="actions-row">
-        <button class="btn btn-primary" id="continue-btn" type="button">Continue</button>
+        <button class="btn btn-primary" id="continue-btn" type="button">${escapeHtml(t("continue"))}</button>
       </div>
     `;
 
-    document.getElementById("continue-btn").addEventListener("click", continueToQualtrics);
+    document.getElementById("continue-btn").addEventListener("click", handleContinueClick);
 
     postTaskMessage("completed", {
       participant: getParticipantMeta(),
@@ -650,17 +790,20 @@
       taskVersion: config.TASK_VERSION,
       blockType: config.BLOCK_TYPE,
       workPeriodSeconds: summarizePracticeOnly ? config.PRACTICE_PERIOD_SECONDS : config.WORK_PERIOD_SECONDS,
-      targetCorrect: summarizePracticeOnly ? null : config.PERFORMANCE_TARGET_CORRECT,
+      targetCorrect: summarizePracticeOnly ? null : getEffectiveTargetCorrect(),
+      scoreToBeat: summarizePracticeOnly ? null : getEffectiveTargetCorrect(),
       attempted: attemptedTrials.length,
       correct: correctCount,
       incorrect: attemptedTrials.length - correctCount,
       accuracy,
       meanRtMs,
       bestStreak: summarizePracticeOnly ? null : state.bestStreak,
-      targetMet: summarizePracticeOnly ? null : state.mainCorrect >= config.PERFORMANCE_TARGET_CORRECT,
+      targetMet: summarizePracticeOnly ? null : didMeetTarget(state.mainCorrect),
+      previousScores: summarizePracticeOnly ? [] : config.PREVIOUS_SCORES,
       practiceEnabled: config.ENABLE_PRACTICE_BLOCK,
       practiceCorrect: state.practiceCorrect,
-      practiceAttempted: state.practiceTrials.length
+      practiceAttempted: state.practiceTrials.length,
+      hebrewMode: config.HEBREW_MODE
     };
   }
 
@@ -676,6 +819,45 @@
     if (window.parent === window) {
       restartTask();
     }
+  }
+
+  function handleContinueClick() {
+    showContinueApprovalDialog((approved) => {
+      if (approved) {
+        continueToQualtrics();
+      }
+    });
+  }
+
+  function showContinueApprovalDialog(onDecision) {
+    const existingDialog = document.getElementById("continue-approval-dialog");
+    if (existingDialog) {
+      existingDialog.remove();
+    }
+
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.id = "continue-approval-dialog";
+
+    overlay.innerHTML = `
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="continue-approval-title">
+        <div class="modal-title" id="continue-approval-title">${escapeHtml(getContinueApprovalPrompt())}</div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" id="continue-approval-yes" type="button">${escapeHtml(t("yes"))}</button>
+          <button class="btn btn-secondary" id="continue-approval-no" type="button">${escapeHtml(t("no"))}</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const closeDialog = (approved) => {
+      overlay.remove();
+      onDecision(approved);
+    };
+
+    overlay.querySelector("#continue-approval-yes").addEventListener("click", () => closeDialog(true));
+    overlay.querySelector("#continue-approval-no").addEventListener("click", () => closeDialog(false));
   }
 
   function updateMainPanels() {
@@ -703,11 +885,11 @@
     }
 
     if (targetLabel) {
-      targetLabel.textContent = `${state.mainCorrect} / ${config.PERFORMANCE_TARGET_CORRECT}`;
+      targetLabel.textContent = `${state.mainCorrect} / ${getEffectiveTargetCorrect()}`;
     }
 
     if (targetFill) {
-      const percent = Math.min((state.mainCorrect / config.PERFORMANCE_TARGET_CORRECT) * 100, 100);
+      const percent = Math.min((state.mainCorrect / getEffectiveTargetCorrect()) * 100, 100);
       targetFill.style.width = `${Number.isFinite(percent) ? percent : 0}%`;
     }
   }
@@ -763,7 +945,10 @@
       workPeriodSeconds: config.WORK_PERIOD_SECONDS,
       practicePeriodSeconds: config.PRACTICE_PERIOD_SECONDS,
       blockType: config.BLOCK_TYPE,
-      performanceTargetCorrect: config.PERFORMANCE_TARGET_CORRECT,
+      performanceTargetCorrect: getEffectiveTargetCorrect(),
+      previousScores: config.PREVIOUS_SCORES,
+      previousScoresCount: config.PREVIOUS_SCORES.length,
+      showPreviousScoresBoard: config.SHOW_PREVIOUS_SCORES_BOARD,
       practiceEnabled: config.ENABLE_PRACTICE_BLOCK,
       practiceFeedback: config.SHOW_PRACTICE_FEEDBACK,
       mainFeedback: config.SHOW_MAIN_FEEDBACK,
@@ -779,8 +964,105 @@
       showTrialsPanel: config.SHOW_TRIALS_PANEL,
       showTrialNumberLabel: config.SHOW_TRIAL_NUMBER_LABEL,
       showSummaryCorrectCard: config.SHOW_SUMMARY_CORRECT_CARD,
-      showSummaryTargetMetCard: config.SHOW_SUMMARY_TARGET_MET_CARD
+      showSummaryTargetMetCard: config.SHOW_SUMMARY_TARGET_MET_CARD,
+      hebrewMode: config.HEBREW_MODE
     };
+  }
+
+  function getEffectiveTargetCorrect() {
+    if (!config.PREVIOUS_SCORES.length) {
+      return clampInteger(config.PERFORMANCE_TARGET_CORRECT, 1, 10000);
+    }
+
+    return getHighestPreviousScore();
+  }
+
+  function getTargetLabelText() {
+    return config.PREVIOUS_SCORES.length ? t("bestSoFar") : t("performanceTarget");
+  }
+
+  function getTargetProgressLabel() {
+    return config.PREVIOUS_SCORES.length ? t("goal") : t("target");
+  }
+
+  function shouldShowPreviousScoresBoard() {
+    return Boolean(state.phase === "main" && config.SHOW_PREVIOUS_SCORES_BOARD && config.PREVIOUS_SCORES.length);
+  }
+
+  function didMeetTarget(score) {
+    return config.PREVIOUS_SCORES.length ? score > getHighestPreviousScore() : score >= getEffectiveTargetCorrect();
+  }
+
+  function getHighestPreviousScore() {
+    return config.PREVIOUS_SCORES.reduce((maxScore, entry) => Math.max(maxScore, entry.score), 0);
+  }
+
+  function getAppNameText() {
+    if (isHebrewMode() && config.APP_NAME === defaults.APP_NAME) {
+      return t("appName");
+    }
+
+    return config.APP_NAME;
+  }
+
+  function getIntroText() {
+    return config.INTRO_TEXT;
+  }
+
+  function getPracticeText() {
+    if (isHebrewMode() && config.PRACTICE_TEXT === defaults.PRACTICE_TEXT) {
+      return t("defaultPracticeText");
+    }
+
+    return config.PRACTICE_TEXT;
+  }
+
+  function getSummaryText() {
+    return config.SUMMARY_TEXT;
+  }
+
+  function getContinueApprovalPrompt() {
+    return isHebrewMode() ? "האם הנסיין אישר לכם להמשיך?" : t("continueApprovalPrompt");
+  }
+
+  function renderPreviousScoresBoard(options = {}) {
+    const { inIntro = false } = options;
+    const leadingIndex = getLeadingPreviousScoreIndex();
+    const rows = config.PREVIOUS_SCORES.map((entry, index) => {
+      return `
+        <li class="leaderboard-item ${index === leadingIndex ? "is-leading" : ""}">
+          <div class="leaderboard-name">${escapeHtml(entry.label)}</div>
+          <div class="leaderboard-score">${entry.score}</div>
+        </li>
+      `;
+    }).join("");
+
+    return `
+      <aside class="leaderboard-panel ${inIntro ? "is-intro" : ""}" aria-label="${escapeHtml(t("previousScores"))}">
+        <div class="leaderboard-title">${escapeHtml(t("previousScores"))}</div>
+        <ol class="leaderboard-list">
+          ${rows}
+        </ol>
+      </aside>
+    `;
+  }
+
+  function getLeadingPreviousScoreIndex() {
+    if (!config.PREVIOUS_SCORES.length) {
+      return -1;
+    }
+
+    let leadingIndex = 0;
+    let leadingScore = config.PREVIOUS_SCORES[0].score;
+
+    config.PREVIOUS_SCORES.forEach((entry, index) => {
+      if (entry.score > leadingScore) {
+        leadingScore = entry.score;
+        leadingIndex = index;
+      }
+    });
+
+    return leadingIndex;
   }
 
   function getParticipantMeta() {
@@ -825,7 +1107,7 @@
 
   function getAccuracy(trials) {
     if (!trials.length) {
-      return "—";
+      return "-";
     }
 
     const correctCount = trials.filter((trial) => trial.isCorrect).length;
@@ -853,6 +1135,90 @@
   function parseInteger(value, fallbackValue) {
     const parsed = Number.parseInt(String(value), 10);
     return Number.isInteger(parsed) ? parsed : fallbackValue;
+  }
+
+  function parsePreviousScores(rawValue, hebrewMode = false) {
+    if (!rawValue) {
+      return [];
+    }
+
+    const value = String(rawValue).trim();
+    if (!value) {
+      return [];
+    }
+
+    try {
+      const parsedJson = JSON.parse(value);
+      if (Array.isArray(parsedJson)) {
+        return normalizePreviousScores(parsedJson, hebrewMode);
+      }
+    } catch (error) {
+      // Fall through to delimited parsing.
+    }
+
+    const tokens = value.split(/[|;]/).map((token) => token.trim()).filter(Boolean);
+    return normalizePreviousScores(tokens, hebrewMode);
+  }
+
+  function normalizePreviousScores(entries, hebrewMode = false) {
+    return entries
+      .map((entry, index) => normalizePreviousScoreEntry(entry, index, hebrewMode))
+      .filter(Boolean);
+  }
+
+  function normalizePreviousScoreEntry(entry, index, hebrewMode = false) {
+    if (entry && typeof entry === "object") {
+      const label = normalizeCompetitorLabel(entry.label || entry.name, index, hebrewMode);
+      return {
+        label,
+        score: clampInteger(entry.score, 0, 10000)
+      };
+    }
+
+    const rawEntry = String(entry || "").trim();
+    if (!rawEntry) {
+      return null;
+    }
+
+    const namedMatch = rawEntry.match(/^(.*?)[=:]\s*(-?\d+)$/);
+    if (namedMatch) {
+      return {
+        label: normalizeCompetitorLabel(namedMatch[1], index, hebrewMode),
+        score: clampInteger(namedMatch[2], 0, 10000)
+      };
+    }
+
+    if (/^-?\d+$/.test(rawEntry)) {
+      return {
+        label: getCompetitorLabel(index + 1, hebrewMode),
+        score: clampInteger(rawEntry, 0, 10000)
+      };
+    }
+
+    return null;
+  }
+
+  function normalizeCompetitorLabel(value, index, hebrewMode = false) {
+    const rawLabel = String(value || "").trim();
+
+    if (!rawLabel) {
+      return getCompetitorLabel(index + 1, hebrewMode);
+    }
+
+    if (hebrewMode) {
+      if (/^(participant|competitor)\b/i.test(rawLabel)) {
+        return rawLabel
+          .replace(/^participant\b/i, "מתחרה")
+          .replace(/^competitor\b/i, "מתחרה");
+      }
+      return rawLabel;
+    }
+
+    return rawLabel.replace(/^participant\b/i, "Competitor");
+  }
+
+  function getCompetitorLabel(index, hebrewMode = isHebrewMode()) {
+    return hebrewMode ? `מתחרה ${index}` : `Competitor ${index}`;
   }
 
   function clampInteger(value, min, max) {
@@ -884,12 +1250,36 @@
 
   function formatSeconds(totalSeconds) {
     if (totalSeconds < 60) {
-      return `${totalSeconds} s`;
+      return `${totalSeconds} ${t("secondsShort")}`;
     }
 
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    return seconds === 0 ? `${minutes} min` : `${minutes} min ${seconds} s`;
+    return seconds === 0
+      ? `${minutes} ${t("minutesShort")}`
+      : `${minutes} ${t("minutesShort")} ${seconds} ${t("secondsShort")}`;
+  }
+
+  function getStartButtonLabel() {
+    if (config.BLOCK_TYPE === "practice") {
+      return t("startPractice");
+    }
+
+    if (config.BLOCK_TYPE === "main") {
+      return t("start");
+    }
+
+    return t("beginPractice");
+  }
+
+  function isHebrewMode() {
+    return Boolean(config.HEBREW_MODE);
+  }
+
+  function t(key, ...args) {
+    const locale = isHebrewMode() ? "he" : "en";
+    const value = COPY[locale][key];
+    return typeof value === "function" ? value(...args) : value;
   }
 
   function escapeHtml(value) {
