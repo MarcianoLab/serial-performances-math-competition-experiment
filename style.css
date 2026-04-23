@@ -113,6 +113,10 @@ input {
   font-size: 1rem;
 }
 
+body.is-rtl {
+  font-family: "Segoe UI", "Noto Sans Hebrew", "Arial Hebrew", sans-serif;
+}
+
 .compact-copy {
   max-width: 56ch;
 }
@@ -172,11 +176,59 @@ input {
   border-color: rgba(15, 157, 88, 0.25);
 }
 
+.alert-callout {
+  background: var(--error-soft);
+  border-color: rgba(197, 61, 47, 0.28);
+  color: var(--error);
+}
+
+.alert-callout-title {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.alert-callout-line {
+  line-height: 1.65;
+}
+
 .actions-row {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 24px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(18, 27, 46, 0.38);
+}
+
+.modal-card {
+  width: min(460px, 100%);
+  padding: 24px;
+  border: 1px solid rgba(216, 223, 235, 0.9);
+  border-radius: var(--radius-lg);
+  background: #ffffff;
+  box-shadow: var(--shadow);
+}
+
+.modal-title {
+  margin-bottom: 18px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
 }
 
 .btn {
@@ -218,6 +270,24 @@ input {
   background: var(--primary-strong);
 }
 
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  padding: 14px 16px;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+body.is-rtl .icon-btn {
+  direction: rtl;
+}
+
+body.is-rtl .icon-btn span {
+  transform: scaleX(-1);
+}
+
 .btn-secondary {
   background: #ffffff;
   border-color: var(--border);
@@ -230,6 +300,25 @@ input {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 24px;
+}
+
+.task-main {
+  min-width: 0;
+}
+
+.task-overview {
+  display: block;
+}
+
+.task-overview.has-board {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.task-overview.has-board .stats-grid {
+  grid-template-columns: 1fr;
 }
 
 .status-pill {
@@ -290,6 +379,69 @@ input {
   transition: width 180ms ease;
 }
 
+.leaderboard-panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  background: #fbfcff;
+  height: 100%;
+}
+
+.leaderboard-panel.is-intro {
+  margin-top: 18px;
+  height: auto;
+}
+
+.leaderboard-title {
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.leaderboard-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: flex-start;
+}
+
+.leaderboard-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 92px;
+  padding: 9px 12px;
+  border: 1px solid rgba(216, 223, 235, 0.9);
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.leaderboard-item.is-leading {
+  border-color: rgba(49, 94, 251, 0.25);
+  background: #f4f8ff;
+  color: var(--primary-strong);
+}
+
+.leaderboard-name {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.leaderboard-score {
+  font-size: 1.1rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 .trial-panel {
   margin-top: 8px;
   border: 1px solid var(--border);
@@ -315,6 +467,48 @@ input {
   letter-spacing: 0.03em;
   line-height: 1.15;
   word-break: break-word;
+}
+
+body.is-rtl .task-header,
+body.is-rtl .target-row,
+body.is-rtl .trial-meta {
+  direction: rtl;
+}
+
+body.is-rtl .actions-row {
+  justify-content: flex-start;
+}
+
+body.is-rtl .modal-card {
+  text-align: center;
+}
+
+body.is-rtl .leaderboard-list,
+body.is-rtl .info-grid,
+body.is-rtl .stats-grid,
+body.is-rtl .summary-grid {
+  direction: rtl;
+}
+
+body.is-rtl .leaderboard-item,
+body.is-rtl .stat-card,
+body.is-rtl .info-card,
+body.is-rtl .summary-card,
+body.is-rtl .callout,
+body.is-rtl .panel-copy,
+body.is-rtl .leaderboard-title,
+body.is-rtl .leaderboard-name,
+body.is-rtl .alert-callout {
+  text-align: right;
+}
+
+body.is-rtl .leaderboard-item {
+  align-items: center;
+}
+
+body.is-rtl .leaderboard-name,
+body.is-rtl .leaderboard-score {
+  text-align: center;
 }
 
 .answer-form {
@@ -411,6 +605,10 @@ input {
   .task-header {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .task-overview.has-board {
+    grid-template-columns: 1fr;
   }
 
   .status-pill {
