@@ -100,11 +100,6 @@ Put this in the Qualtrics question JavaScript.
 
 ```javascript
 Qualtrics.SurveyEngine.addOnload(function () {
-  var q = this;
-  var nextButton = document.getElementById("NextButton");
-  var trialLogs = [];
-
-  // Prevent the task from taking over the page while editing in the Qualtrics builder.
   var isEditor =
     document.body.classList.contains("ControlPanel") ||
     document.body.classList.contains("Builder") ||
@@ -117,6 +112,22 @@ Qualtrics.SurveyEngine.addOnload(function () {
       editorContainer.style.position = "relative";
     }
     return;
+  }
+
+  var q = this;
+  var nextButton = document.getElementById("NextButton");
+  var mainTrials = [];
+
+  function saveEmbeddedData(name, value) {
+    var safeValue = value == null ? "" : String(value);
+
+    if (Qualtrics.SurveyEngine.setJSEmbeddedData) {
+      Qualtrics.SurveyEngine.setJSEmbeddedData(name, safeValue);
+    }
+
+    if (Qualtrics.SurveyEngine.setEmbeddedData) {
+      Qualtrics.SurveyEngine.setEmbeddedData(name, safeValue);
+    }
   }
 
   function setDisplay(selector, value) {
@@ -175,39 +186,130 @@ Qualtrics.SurveyEngine.addOnload(function () {
     }
   }
 
-  function onTaskMessage(event) {
+  function getScoreFromHtml(index) {
+    var el = document.getElementById("apt-result" + index);
+    if (!el) return "";
+
+    var value = String(el.textContent || el.innerText || "").trim();
+    var unresolved = "${e://Field/result" + index + "}";
+
+    if (!value || value === unresolved) {
+      return "";
+    }
+
+    return value;
+  }
+
+  function buildPreviousScores() {
+    var scores = [];
+
+    for (var i = 1; i <= 10; i += 1) {
+      var raw = getScoreFromHtml(i);
+      if (!raw) continue;
+
+      var numeric = parseInt(raw, 10);
+      if (!isNaN(numeric)) {
+        scores.push("Competitor " + i + ":" + numeric);
+      }
+    }
+
+    return scores.join("|");
+  }
+
+  function buildTaskUrl() {
+    var baseUrl = "https://marcianolab.github.io/serial-performances-math-competition-experiment/";
+    var previousScores = buildPreviousScores();
+
+    var params = [
+      "participantId=" + encodeURIComponent("${e://Field/ResponseID}"),
+      "sessionId=" + encodeURIComponent("${e://Field/SessionID}"),
+      "condition=" + encodeURIComponent("${e://Field/Condition}"),
+      "blockType=main",
+      "workSeconds=120",
+      "mainFeedback=1",
+      "targetVisible=0",
+      "showIntroTarget=0",
+      "showPreviousScoresBoard=1",
+      "hebrewMode=1"
+    ];
+
+    if (previousScores) {
+      params.push("previousScores=" + encodeURIComponent(previousScores));
+    } else {
+      params.push("target=" + encodeURIComponent("${e://Field/TargetValue}"));
+    }
+
+    return baseUrl + "?" + params.join("&");
+  }
+
+  var onTaskMessage = function (event) {
     var data = event.data;
     if (!data || data.source !== "arithmetic-task") return;
 
     if (data.eventType === "trial") {
-      trialLogs.push(data.payload);
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_last_trial_json", JSON.stringify(data.payload));
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_trial_count", String(trialLogs.length));
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_last_accuracy", data.payload.isCorrect ? "1" : "0");
+      var payload = data.payload || {};
+
+      if (payload.phase === "main") {
+        mainTrials.push({
+          participantId: payload.participantId || "",
+          sessionId: payload.sessionId || "",
+          condition: payload.condition || "",
+          phase: payload.phase || "",
+          overallTrialIndex: payload.overallTrialIndex != null ? payload.overallTrialIndex : null,
+          phaseTrialIndex: payload.phaseTrialIndex != null ? payload.phaseTrialIndex : null,
+          prompt: payload.prompt || "",
+          correctAnswer: payload.correctAnswer != null ? payload.correctAnswer : null,
+          response: payload.response != null ? payload.response : null,
+          isCorrect: payload.isCorrect != null ? payload.isCorrect : null,
+          timedOut: payload.timedOut != null ? payload.timedOut : null,
+          rtMs: payload.rtMs != null ? payload.rtMs : null,
+          setSize: payload.setSize != null ? payload.setSize : null,
+          targetCorrect: payload.targetCorrect != null ? payload.targetCorrect : null,
+          scoreToBeat: payload.scoreToBeat != null ? payload.scoreToBeat : null,
+          previousScores: payload.previousScores || [],
+          displayedAtIso: payload.displayedAtIso || "",
+          submittedAtIso: payload.submittedAtIso || ""
+        });
+
+        saveEmbeddedData("main_trial_count", mainTrials.length);
+      }
+
       return;
     }
 
     if (data.eventType === "completed") {
-      var summary = data.payload.summary || {};
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_summary_json", JSON.stringify(summary));
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_correct", String(summary.correct || 0));
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_accuracy", summary.accuracy || "");
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_trials_json", JSON.stringify(data.payload.trials || []));
-      Qualtrics.SurveyEngine.setEmbeddedData("apt_practice_trials_json", JSON.stringify(data.payload.practiceTrials || []));
+      var payload = data.payload || {};
+      var summary = payload.summary || {};
+      var trials = payload.trials || mainTrials;
+
+      saveEmbeddedData("debug_task_completed", "yes_" + new Date().toISOString());
+      saveEmbeddedData("main_summary_json", JSON.stringify(summary));
+      saveEmbeddedData("main_correct", summary.correct != null ? summary.correct : "");
+      saveEmbeddedData("main_attempted", summary.attempted != null ? summary.attempted : "");
+      saveEmbeddedData("main_accuracy", summary.accuracy != null ? summary.accuracy : "");
+      saveEmbeddedData("main_mean_rt_ms", summary.meanRtMs != null ? summary.meanRtMs : "");
+      saveEmbeddedData("main_target_met", summary.targetMet != null ? summary.targetMet : "");
+      saveEmbeddedData("main_score_to_beat", summary.scoreToBeat != null ? summary.scoreToBeat : "");
+      saveEmbeddedData("main_previous_scores_json", JSON.stringify(summary.previousScores || []));
+      saveEmbeddedData("main_trial_table_json", JSON.stringify(trials));
+      saveEmbeddedData("main_trial_count", trials.length);
       return;
     }
 
     if (data.eventType === "continue") {
       restoreQualtricsChrome();
       window.removeEventListener("message", onTaskMessage);
-      if (nextButton) {
-        q.clickNextButton();
-      }
+      q.clickNextButton();
     }
-  }
+  };
 
   hideQualtricsChrome();
   window.addEventListener("message", onTaskMessage);
+
+  var iframe = document.getElementById("apt-frame");
+  if (iframe) {
+    iframe.src = buildTaskUrl();
+  }
 
   Qualtrics.SurveyEngine.addOnUnload(function () {
     window.removeEventListener("message", onTaskMessage);
